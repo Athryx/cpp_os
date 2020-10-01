@@ -1,9 +1,9 @@
-#include <util/time.h>
-#include <types.h>
-#include <int.h>
-#include <arch/x64/common.h>
-#include <util/misc.h>
-#include <util/io.h>
+#include <util/time.hpp>
+#include <types.hpp>
+#include <int.hpp>
+#include <arch/x64/common.hpp>
+#include <util/misc.hpp>
+#include <util/io.hpp>
 
 
 #define PIT_INTERRUPT_TERMINAL_COUNT 0

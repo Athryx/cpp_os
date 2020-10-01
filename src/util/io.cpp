@@ -1,6 +1,6 @@
-#include <util/io.h>
-#include <types.h>
-#include <arch/x64/common.h>
+#include <util/io.hpp>
+#include <types.hpp>
+#include <arch/x64/common.hpp>
 
 
 void kprintf (const char *__restrict__ format, ...);

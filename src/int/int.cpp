@@ -1,7 +1,7 @@
-#include <int.h>
-#include <types.h>
-#include <arch/x64/special.h>
-#include <util/misc.h>
+#include <int.hpp>
+#include <types.hpp>
+#include <arch/x64/special.hpp>
+#include <util/misc.hpp>
 
 
 #define make_int_handler(vec)				\

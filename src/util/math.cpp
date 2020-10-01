@@ -1,5 +1,5 @@
-#include <util/math.h>
-#include <types.h>
+#include <util/math.hpp>
+#include <types.hpp>
 
 
 int powi (const int a, const int b);

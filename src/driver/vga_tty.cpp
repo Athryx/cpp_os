@@ -1,7 +1,7 @@
-#include <driver/tty.h>
-#include <types.h>
-#include <def/keys.h>
-#include <util/string.h>
+#include <driver/tty.hpp>
+#include <types.hpp>
+#include <def/keys.hpp>
+#include <util/string.hpp>
 
 
 #define VGA_ROWS 25 // height

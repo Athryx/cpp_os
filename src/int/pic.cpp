@@ -1,6 +1,6 @@
-#include <int.h>
-#include <arch/x64/common.h>
-#include <types.h>
+#include <int.hpp>
+#include <arch/x64/common.hpp>
+#include <types.hpp>
 
 
 #define PICM_COMMAND 0x20

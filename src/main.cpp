@@ -1,14 +1,14 @@
-#include <types.h>
-#include <init.h>
-#include <gdt.h>
-#include <global.h>
-#include <util/misc.h>
-#include <arch/x64/common.h>
+#include <types.hpp>
+#include <init.hpp>
+#include <gdt.hpp>
+#include <global.hpp>
+#include <util/misc.hpp>
+#include <arch/x64/common.hpp>
 
-#include <util/io.h>
-#include <driver/tty.h>
-#include <util/time.h>
-#include <arch/x64/special.h>
+#include <util/io.hpp>
+#include <driver/tty.hpp>
+#include <util/time.hpp>
+#include <arch/x64/special.hpp>
 
 
 void thread_2 (void)

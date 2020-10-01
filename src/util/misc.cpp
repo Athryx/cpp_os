@@ -1,5 +1,5 @@
-#include <util/misc.h>
-#include <types.h>
+#include <util/misc.hpp>
+#include <types.hpp>
 
 
 usize align_up (usize addr, usize align);

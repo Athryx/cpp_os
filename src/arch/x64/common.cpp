@@ -1,6 +1,6 @@
-#include <arch/x64/common.h>
-#include <types.h>
-#include <util/math.h>
+#include <arch/x64/common.hpp>
+#include <types.hpp>
+#include <util/math.hpp>
 
 
 // irqs start disabled

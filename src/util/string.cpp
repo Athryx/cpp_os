@@ -1,5 +1,5 @@
-#include <util/string.h>
-#include <types.h>
+#include <util/string.hpp>
+#include <types.hpp>
 
 
 void *memcpy (void *dest, const void *src, usize n);

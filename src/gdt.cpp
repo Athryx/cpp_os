@@ -1,7 +1,7 @@
-#include <gdt.h>
-#include <types.h>
-#include <arch/x64/special.h>
-#include <util/misc.h>
+#include <gdt.hpp>
+#include <types.hpp>
+#include <arch/x64/special.hpp>
+#include <util/misc.hpp>
 
 
 struct gdt gdt;

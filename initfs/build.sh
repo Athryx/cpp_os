@@ -21,7 +21,7 @@ OUT_FILE=initfs.bin
 
 LD_SCRIPT=$ARC/linker.ld
 
-COMP_FLAGS="-c -I$INCL/ -std=gnu99 -ffreestanding -Wall -Wextra -mno-red-zone -mgeneral-regs-only -D $ARCH"
+COMP_FLAGS="-c -I$INCL/ -ffreestanding -fno-rtti -fno-exceptions -Wall -Wextra -mno-red-zone -mgeneral-regs-only -D $ARCH"
 ASM_FLAGS="-f elf64 -F dwarf"
 LINK_FLAGS="-ffreestanding -nostdlib -lgcc -n"
 
@@ -60,7 +60,7 @@ function c_build {
 	then
 		echo "Compiling $1..."
 	#probably bad idea to use large code model, but im to lazy to change pagind now
-		amd64-elf-gcc $1 -o $BUILDDIR/$1$EXT $G $O $COMP_FLAGS
+		amd64-elf-g++ $1 -o $BUILDDIR/$1$EXT $G $O $COMP_FLAGS
 	else
 		return 0
 	fi
@@ -89,9 +89,9 @@ function build {
 
 	if [[ $EXT = ".g.o" ]]
 	then
-		amd64-elf-gcc $G_O_FILES -o $OUT_FILE $LINK_FLAGS
+		amd64-elf-g++ $G_O_FILES -o $OUT_FILE $LINK_FLAGS
 	else
-		amd64-elf-gcc $O_FILES -o $OUT_FILE $LINK_FLAGS
+		amd64-elf-g++ $O_FILES -o $OUT_FILE $LINK_FLAGS
 	fi
 }
 

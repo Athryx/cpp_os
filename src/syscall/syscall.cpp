@@ -1,8 +1,8 @@
-#include <syscall.h>
-#include <types.h>
-#include <arch/x64/special.h>
+#include <syscall.hpp>
+#include <types.hpp>
+#include <arch/x64/special.hpp>
 
-#include <util/io.h>
+#include <util/io.hpp>
 
 
 //typedef usize (*syscall_func_t) (usize, usize, usize, usize, usize, usize, u32);

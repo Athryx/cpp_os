@@ -1,9 +1,9 @@
-#include <driver/kbd.h>
-#include <types.h>
-#include <int.h>
-#include <arch/x64/common.h>
-#include <util/io.h>
-#include <util/math.h>
+#include <driver/kbd.hpp>
+#include <types.hpp>
+#include <int.hpp>
+#include <arch/x64/common.hpp>
+#include <util/io.hpp>
+#include <util/math.hpp>
 // this is supposed to be a bad driver, it is temporry since drivers will be in userland if I am still working on this by then
 
 

@@ -1,13 +1,13 @@
-#include <init.h>
-#include <types.h>
-#include <gdt.h>
-#include <int.h>
-#include <util/io.h>
-#include <driver/kbd.h>
-#include <driver/tty.h>
-#include <util/time.h>
-#include <arch/x64/common.h>
-#include <syscall.h>
+#include <init.hpp>
+#include <types.hpp>
+#include <gdt.hpp>
+#include <int.hpp>
+#include <util/io.hpp>
+#include <driver/kbd.hpp>
+#include <driver/tty.hpp>
+#include <util/time.hpp>
+#include <arch/x64/common.hpp>
+#include <syscall.hpp>
 
 
 static void double_fault (struct int_data* data, error_code_t error_code);
