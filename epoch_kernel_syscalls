@@ -1,0 +1,47 @@
+abi:
+rax: arg 6, return value
+rbx: arg 2
+rcx: not saved
+rdx: arg 1
+rbp: saved
+rsp: saved
+rsi[0-31]: syscall number
+rsi[32-63]: syscall options
+rdi: arg 5
+r8: arg 3
+r9: arg 4
+r10: not saved
+r11: not saved
+r12: arg 7, saved if unused
+r13: arg 8, saved if unused
+r14: arg 9, saved if unused
+r15: arg 10, saved if unused
+
+0: info
+
+
+1: fork
+
+
+2: exec
+
+
+3: thread_new
+
+
+4: thread_block
+
+
+5: usize realloc (usize mem, usize orig, usize new)
+
+
+6: salloc
+
+
+7: sfree
+
+
+8: reg
+
+
+9: notify

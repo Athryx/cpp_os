@@ -1,0 +1,12 @@
+Top:
+Includes (first include header it is defineing functions for, then c standard library headers, than other headers)
+Defines
+Macros
+Type definitions
+global variables
+function declarations
+function implementations
+main
+bottom:
+
+two newlines between each section

@@ -1,0 +1,141 @@
+#!/bin/bash
+
+ARCH=x64
+
+PROJECT=$(dirname $0)
+cd $PROJECT
+
+BUILDDIR=abuild
+
+SUBDIRS="initfs"
+
+SRC=src
+INCL=include
+ARC=$SRC/arch/$ARCH
+
+UTIL=$SRC/util
+MEM=$SRC/mem
+THR=$SRC/thread
+INT=$SRC/int
+DR=$SRC/driver
+TME=$SRC/time
+CALL=$SRC/syscall
+
+ARC_THR=$ARC/thread
+ARC_CALL=$ARC/syscall
+
+C_FILES="$SRC/main.cpp $SRC/init.cpp $SRC/cxx.cpp $SRC/gdt.cpp $SRC/global.cpp $DR/vga_tty.cpp $DR/ps2.cpp $UTIL/io.cpp $UTIL/string.cpp $UTIL/math.cpp $UTIL/misc.cpp $TME/pit.cpp $INT/pic.cpp $INT/int.cpp $CALL/syscall.cpp $ARC/common.cpp"
+
+ASM_FILES="$SRC/resources.asm $ARC/mb2.asm $ARC/boot.asm $ARC/long_init.asm $ARC/common.asm $ARC/special.asm $ARC_THR/thread.asm $ARC_CALL/syscall.asm"
+
+OUT_FILE=$BUILDDIR/iso/boot/kernel.bin
+
+LD_SCRIPT=$ARC/linker.ld
+
+COMP_FLAGS="-c -I$INCL/ -ffreestanding -fno-rtti -fno-exceptions -Wall -Wextra -mno-red-zone -mgeneral-regs-only -mcmodel=large -D $ARCH"
+ASM_FLAGS="-f elf64 -F dwarf"
+LINK_FLAGS="-ffreestanding -nostdlib -lgcc -mcmodel=large -n -T $LD_SCRIPT"
+
+O=-O2
+EXT=".o"
+[[ $1 = debug ]] && G=-g && O=-O0 && EXT=".g.o"
+
+for C_FILE in $C_FILES
+do
+	O_FILES="$O_FILES $BUILDDIR/$C_FILE.o"
+	G_O_FILES="$G_O_FILES $BUILDDIR/$C_FILE.g.o"
+done
+
+for ASM_FILE in $ASM_FILES
+do
+	O_FILES="$O_FILES $BUILDDIR/$ASM_FILE.o"
+	G_O_FILES="$G_O_FILES $BUILDDIR/$ASM_FILE.g.o"
+done
+
+# make directories for gcc, otherwise it complains
+mkdir -p $(tree -fid src/ | awk -v builddir="$BUILDDIR/" '{if ($0 == "") exit 0; print builddir $1}')
+
+# src first, then object file, returns 0 if needed to build file
+function comp_time {
+	TEMP=$BUILDDIR/$1$EXT
+	[[ -e $TEMP ]] || return 0
+	DEPS="$(awk 'BEGIN {FS="<"; ORS=" "} /^#include/ {gsub (/>/, ""); print "include/" $2}' $1) $1"
+	for DEP in $DEPS
+	do
+		[[ $DEP -nt $TEMP ]] && return 0
+	done
+}
+
+function c_build {
+	if comp_time $1
+	then
+		echo "Compiling $1..."
+	#probably bad idea to use large code model, but im to lazy to change pagind now
+		amd64-elf-g++ $1 -o $BUILDDIR/$1$EXT $G $O $COMP_FLAGS
+	else
+		return 0
+	fi
+}
+
+function asm_build {
+	if comp_time $1
+	then
+		echo "Assembling $1..."
+		nasm $1 -o $BUILDDIR/$1$EXT $G $ASM_FLAGS
+	else
+		return 0
+	fi
+}
+
+function build {
+	for C_FILE in $C_FILES
+	do
+		c_build $C_FILE || return 1
+	done
+
+	for ASM_FILE in $ASM_FILES
+	do
+		asm_build $ASM_FILE || return 1
+	done
+
+	if [[ $EXT = ".g.o" ]]
+	then
+		amd64-elf-g++ $G_O_FILES -o $OUT_FILE $LINK_FLAGS
+	else
+		amd64-elf-g++ $O_FILES -o $OUT_FILE $LINK_FLAGS
+	fi
+}
+
+function build_subdirs {
+	for SUBDIR in $SUBDIRS
+	do
+		$SUBDIR/build.sh $1 || return 1
+	done
+}
+
+if [[ $1 = clean ]]
+then
+	build_subdirs clean
+	rm -rf $BUILDDIR/$SRC $OUT_FILE $BUILDDIR/kernel.iso
+	exit 0
+elif build_subdirs $1 && build
+then
+	grub-mkrescue -d /usr/lib/grub/i386-pc -o $BUILDDIR/kernel.iso $BUILDDIR/iso
+	echo kernel built
+
+	[[ $1 = run ]] && qemu-system-x86_64 -m 1024 -cdrom $BUILDDIR/kernel.iso
+
+	if [[ $1 = debug ]]
+	then
+		qemu-system-x86_64 -s -S $BUILDDIR/kernel.iso -d int & termite -e "gdb -x debug.gdb"
+	fi
+
+	if [[ $1 = bochs ]]
+	then
+		termite -e "bochs -f bochsrc"
+	fi
+	exit 0
+else
+	echo kernel build failed
+	exit 1
+fi
