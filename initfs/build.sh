@@ -21,13 +21,13 @@ OUT_FILE=initfs.bin
 
 LD_SCRIPT=$ARC/linker.ld
 
-COMP_FLAGS="-c -I$INCL/ -ffreestanding -fno-rtti -fno-exceptions -Wall -Wextra -mno-red-zone -mgeneral-regs-only -D $ARCH"
-ASM_FLAGS="-f elf64 -F dwarf"
-LINK_FLAGS="-ffreestanding -nostdlib -lgcc -n"
-
 O=-O2
 EXT=".o"
-[[ $1 = debug ]] && G=-g && O=-O0 && EXT=".g.o"
+[[ $1 = debug ]] && G_DEF="-D debug" && G=-g && O=-O0 && EXT=".g.o"
+
+COMP_FLAGS="-c -I$INCL/ -ffreestanding -fno-rtti -fno-exceptions -Wall -Wextra -mno-red-zone -mgeneral-regs-only -D $ARCH $G_DEF"
+ASM_FLAGS="-f elf64 -F dwarf"
+LINK_FLAGS="-ffreestanding -nostdlib -lgcc -n"
 
 for C_FILE in $C_FILES
 do

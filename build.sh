@@ -20,25 +20,27 @@ INT=$SRC/int
 DR=$SRC/driver
 TME=$SRC/time
 CALL=$SRC/syscall
+SYNC=$SRC/sync
 
 ARC_THR=$ARC/thread
 ARC_CALL=$ARC/syscall
+ARC_SYNC=$ARC/sync
 
-C_FILES="$SRC/main.cpp $SRC/init.cpp $SRC/cxx.cpp $SRC/gdt.cpp $SRC/global.cpp $DR/vga_tty.cpp $DR/ps2.cpp $UTIL/io.cpp $UTIL/string.cpp $UTIL/math.cpp $UTIL/misc.cpp $TME/pit.cpp $INT/pic.cpp $INT/int.cpp $CALL/syscall.cpp $ARC/common.cpp"
+C_FILES="$SRC/main.cpp $SRC/init.cpp $SRC/cxx.cpp $SRC/gdt.cpp $SRC/global.cpp $DR/vga_tty.cpp $DR/ps2.cpp $UTIL/io.cpp $UTIL/string.cpp $UTIL/math.cpp $UTIL/misc.cpp $TME/pit.cpp $SYNC/spinlock.cpp $MEM/pmem.cpp $INT/pic.cpp $INT/int.cpp $CALL/syscall.cpp $ARC/common.cpp"
 
-ASM_FILES="$SRC/resources.asm $ARC/mb2.asm $ARC/boot.asm $ARC/long_init.asm $ARC/common.asm $ARC/special.asm $ARC_THR/thread.asm $ARC_CALL/syscall.asm"
+ASM_FILES="$SRC/resources.asm $ARC/mb2.asm $ARC/boot.asm $ARC/long_init.asm $ARC/common.asm $ARC/special.asm $ARC_THR/thread.asm $ARC_CALL/syscall.asm $ARC_SYNC/spinlock.asm"
 
 OUT_FILE=$BUILDDIR/iso/boot/kernel.bin
 
 LD_SCRIPT=$ARC/linker.ld
 
-COMP_FLAGS="-c -I$INCL/ -ffreestanding -fno-rtti -fno-exceptions -Wall -Wextra -mno-red-zone -mgeneral-regs-only -mcmodel=large -D $ARCH"
-ASM_FLAGS="-f elf64 -F dwarf"
-LINK_FLAGS="-ffreestanding -nostdlib -lgcc -mcmodel=large -n -T $LD_SCRIPT"
-
 O=-O2
 EXT=".o"
-[[ $1 = debug ]] && G=-g && O=-O0 && EXT=".g.o"
+[[ $1 = debug ]] && G_DEF="-D debug" G=-g && O=-O0 && EXT=".g.o"
+
+COMP_FLAGS="-c -I$INCL/ -ffreestanding -fno-rtti -fno-exceptions -Wall -Wextra -mno-red-zone -mgeneral-regs-only -mcmodel=large -D $ARCH $G_DEF"
+ASM_FLAGS="-f elf64 -F dwarf"
+LINK_FLAGS="-ffreestanding -nostdlib -lgcc -mcmodel=large -n -T $LD_SCRIPT"
 
 for C_FILE in $C_FILES
 do
@@ -127,7 +129,7 @@ then
 
 	if [[ $1 = debug ]]
 	then
-		qemu-system-x86_64 -s -S $BUILDDIR/kernel.iso -d int & termite -e "gdb -x debug.gdb"
+		qemu-system-x86_64 -serial stdio -s -S $BUILDDIR/kernel.iso & termite -e "gdb -x debug.gdb"
 	fi
 
 	if [[ $1 = bochs ]]

@@ -1,11 +1,13 @@
 #include <util/math.hpp>
 #include <types.hpp>
+#include <util/misc.hpp>
 
 
 int powi (const int a, const int b);
+u8 log2 (u64 in);
 int wrap (const int in, const int lower, const int upper);
 int clamp (const int in, const int lower, const int upper);
-int abs (int in);
+i32 abs (i32 in);
 i8 sign (i32 in);
 
 
@@ -17,6 +19,22 @@ int powi (const int a, const int b)
 		out *= a;
 	}
 	return out;
+}
+
+u8 log2 (u64 in)
+{
+	u8 out = 0;
+	while (in >>= 1)
+	{
+		out ++;
+	}
+	return out;
+}
+
+// probably can do faaster
+u8 log2_up (u64 in)
+{
+	return log2 (align_up (in, (1 << log2 (in))));
 }
 
 int wrap (const int in, const int lower, const int upper)
