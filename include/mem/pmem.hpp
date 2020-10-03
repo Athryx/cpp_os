@@ -48,8 +48,11 @@ struct __attribute__ ((packed)) metadata
 class pallocator
 {
 	public:
+		// needed because a pallocator is needed in data section, but start and end address are not known at compile time
+		pallocator () {}
 		// end_addr must be at least a page bigger than start_addr
 		pallocator (usize start_addr, usize end_addr, usize first_order_size);
+		void init (usize start_addr, usize end_addr, usize first_order_size);
 		void *alloc (usize n);
 		void free (void *mem);
 	private:

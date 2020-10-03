@@ -26,7 +26,7 @@ ARC_THR=$ARC/thread
 ARC_CALL=$ARC/syscall
 ARC_SYNC=$ARC/sync
 
-C_FILES="$SRC/main.cpp $SRC/init.cpp $SRC/cxx.cpp $SRC/gdt.cpp $SRC/global.cpp $DR/vga_tty.cpp $DR/ps2.cpp $UTIL/io.cpp $UTIL/string.cpp $UTIL/math.cpp $UTIL/misc.cpp $TME/pit.cpp $SYNC/spinlock.cpp $MEM/pmem.cpp $INT/pic.cpp $INT/int.cpp $CALL/syscall.cpp $ARC/common.cpp"
+C_FILES="$SRC/main.cpp $SRC/init.cpp $SRC/cxx.cpp $SRC/gdt.cpp $SRC/global.cpp $DR/vga_tty.cpp $DR/ps2.cpp $UTIL/io.cpp $UTIL/string.cpp $UTIL/math.cpp $UTIL/misc.cpp $TME/pit.cpp $SYNC/spinlock.cpp $MEM/mem.cpp $MEM/pmem.cpp $INT/pic.cpp $INT/int.cpp $CALL/syscall.cpp $ARC/common.cpp"
 
 ASM_FILES="$SRC/resources.asm $ARC/mb2.asm $ARC/boot.asm $ARC/long_init.asm $ARC/common.asm $ARC/special.asm $ARC_THR/thread.asm $ARC_CALL/syscall.asm $ARC_SYNC/spinlock.asm"
 

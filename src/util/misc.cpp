@@ -23,7 +23,7 @@ usize align_down (usize addr, usize align)
 
 usize align_of (usize addr)
 {
-	return addr ? addr ^ (addr - 1) : 0;
+	return addr ? ((addr ^ (addr - 1)) + 1) >> 1 : 0;
 }
 
 u64 get_bits (u64 n, u8 l, u8 h)

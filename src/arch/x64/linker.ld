@@ -27,33 +27,33 @@ SECTIONS
 
 	.text ALIGN(4K) : AT(ADDR(.text) - KERNEL_VMA)
 	{
-		text_start = .;
+		TEXT_START = .;
 		*(.text)
-		text_end = .;
+		TEXT_END = .;
 	}
 
 	.rodata ALIGN(4K) : AT(ADDR(.rodata) - KERNEL_VMA)
 	{
-		rodata_start = .;
+		RODATA_START = .;
 		*(.rodata)
-		rodata_end = .;
+		RODATA_END = .;
 	}
 
 	.data ALIGN(4K) : AT(ADDR(.data) - KERNEL_VMA)
 	{
-		data_start = .;
+		DATA_START = .;
 		*(.data)
-		data_end = .;
+		DATA_END = .;
 	}
 
 	.bss ALIGN(4K) : AT(ADDR(.bss) - KERNEL_VMA)
 	{
-		bss_start = .;
+		BSS_START = .;
 		*(.bss)
-		bss_end = .;
+		BSS_END = .;
 	}
 	. = ALIGN(4K);
-	kernel_end = .;
+	KERNEL_END = .;
 
 	/DISCARD/ :
 	{

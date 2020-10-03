@@ -8,6 +8,7 @@
 #include <util/time.hpp>
 #include <arch/x64/common.hpp>
 #include <syscall.hpp>
+#include <mem/mem.hpp>
 
 
 static void double_fault (struct int_data* data, error_code_t error_code);
@@ -38,11 +39,12 @@ static void kbd_p (struct int_data* data, error_code_t error_code)
 
 u8 init (void)
 {
+	vga_clear ();
+
 	gdt_init ();
 
 	syscall_init ();
 
-	vga_clear ();
 	// remap pics
 	pic_remap (PICM_OFFSET, PICM_OFFSET);
 
@@ -52,6 +54,8 @@ u8 init (void)
 
 	reg_int_handler (EXC_DOUBLE_FAULT, double_fault, true);
 	reg_int_handler (EXC_PAGE_FAULT, page_fault, false);
+
+	mem::init ();
 
 	// temporary
 	kbd_init ();

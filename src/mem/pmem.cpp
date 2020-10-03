@@ -1,17 +1,28 @@
 #include <mem/pmem.hpp>
 #include <types.hpp>
-#include <mem/mem_def.hpp>
+#include <mem/mem.hpp>
 #include <util/misc.hpp>
 #include <util/math.hpp>
 #include <util/io.hpp>
 
 
 pallocator::pallocator (usize start_addr, usize end_addr, usize first_order_size)
-: start_addr (align_up (start_addr, first_order_size)),
-end_meta (align_down (end_addr, first_order_size)),
-first_order_size (max(first_order_size, PAGE_SIZE)),
-fo_bits (log2 (max(first_order_size, PAGE_SIZE)))
 {
+	init (start_addr, end_addr, first_order_size);
+}
+
+void pallocator::init (usize start_addr, usize end_addr, usize first_order_size)
+{
+	first_order_size = max(first_order_size, PAGE_SIZE);
+
+	usize temp_s = align_up (start_addr, first_order_size);
+	this->start_addr = temp_s;
+
+	this->end_meta = align_down (end_addr, first_order_size);
+
+	this->first_order_size = first_order_size;
+	this->fo_bits = log2 (first_order_size);
+
 	if (end_meta <= this->start_addr)
 	{
 		error("allocator passed invalid memory zone")
@@ -19,13 +30,16 @@ fo_bits (log2 (max(first_order_size, PAGE_SIZE)))
 	}
 
 	usize diff = end_meta - this->start_addr;
-	this->end_addr = end_meta - align_up (8 * (diff / first_order_size), PAGE_SIZE);
+	this->end_addr = align_down (end_meta - align_up (8 * (diff / first_order_size), PAGE_SIZE), first_order_size);
 
-	usize temp_s = this->start_addr;
 
 	while (temp_s < this->end_addr)
 	{
-		usize size = min(align_of (temp_s), align_of (this->end_addr - temp_s));
+		usize size = align_of (temp_s);
+		// this feels like a bad way to do it
+		while (size > this->end_addr)
+			size >>= 1;
+
 		struct free_zone *zone = (struct free_zone *) temp_s;
 		zone->n = size;
 
@@ -45,11 +59,14 @@ void *pallocator::alloc (usize n)
 
 	struct free_zone *out = lists[order].pop ();
 
+	if (out == NULL)
+		return NULL;
+
 	struct metadata *meta = get_meta ((usize) out);
 	meta->alloced = 1;
 	meta->order = order;
 
-	return lists[order].pop ();
+	return out;
 }
 
 void pallocator::free (void *mem)
@@ -76,7 +93,8 @@ void pallocator::free (void *mem)
 
 u8 pallocator::get_order (usize n)
 {
-	return log2_up (n) - fo_bits;
+	u8 temp = log2_up (n);
+	return temp >= fo_bits ? temp - fo_bits : 0;
 }
 
 bool pallocator::populate_order (u8 order)
@@ -122,16 +140,16 @@ void pallocator::merge_order (usize addr, u8 order)
 	lists[order].remove_p (z_first);
 	lists[order].remove_p (z_second);
 
-	z_first->n = order_s;
+	z_first->n = order_s << 1;
 
-	lists[order].append (z_first);
+	lists[order + 1].append (z_first);
 
-	merge_order (addr, order + 1);
+	merge_order ((usize) z_first, order + 1);
 }
 
 struct metadata *pallocator::get_meta (usize addr)
 {
-	return (struct metadata *) ((addr - start_addr) / first_order_size);
+	return (struct metadata *) (((addr - start_addr) / first_order_size) + end_addr);
 }
 
 
@@ -173,7 +191,7 @@ bool order_list::append (struct free_zone *zone)
 	}
 
 	end->next = zone;
-	zone->prev = start;
+	zone->prev = end;
 	end = zone;
 	return true;
 }
@@ -210,8 +228,9 @@ struct free_zone *order_list::pop_start ()
 	if (len == 0)
 		return start;
 
+	struct free_zone *out = start;
 	start = start->next;
-	return start;
+	return out;
 }
 
 struct free_zone *order_list::pop ()
@@ -224,8 +243,9 @@ struct free_zone *order_list::pop ()
 	if (len == 0)
 		return end;
 
+	struct free_zone *out = end;
 	end = end->prev;
-	return end;
+	return out;
 }
 
 struct free_zone *order_list::remove (usize index)

@@ -9,6 +9,10 @@
 #include <driver/tty.hpp>
 #include <util/time.hpp>
 #include <arch/x64/special.hpp>
+#include <mem/mem.hpp>
+
+
+using namespace mem;
 
 
 void thread_2 (void)
@@ -37,30 +41,30 @@ void main_thread (void)
 	kprintf ("initfs_len: %x\n", &initfs_len);
 	kprintf ("initfs: %s\n", initfs);
 	//test_thread ();
-	/*int *a = alloc (1);
+	int *a = (int *) alloc (1);
 
 	kprintf ("hi");
 
-	free (a, 1);
+	free (a);
 
-	int *b = alloc (1);
-	int *c = alloc (1);
+	int *b = (int *) alloc (1);
+	int *c = (int *) alloc (1);
 
 
 	*c = 0xf;
 	kprintf ("%x\n", *b);
-	free (b, 1);
+	free (b);
 
-	int *d = alloc (1);
-	int *e = alloc (1);
+	int *d = (int *) alloc (1);
+	int *e = (int *) alloc (1);
 
-	free (c, 1);
-	free (d, 1);
-	free (e, 1);
+	free (c);
+	free (d);
+	free (e);
 
 	kprintf ("addresses: a: %x, b: %x, c: %x, d: %x, e: %x\n", a, b, c, d, e);
 
-	kprintf ("hi\n");*/
+	kprintf ("hi\n");
 
 	/*int *a = (int *) kalloc (1);
 
@@ -96,11 +100,12 @@ extern "C" [[ noreturn ]] void _start (void)
 	// bochs magic breakpoint for debugging
 	asm volatile ("xchgw %bx, %bx");
 
-	if (!init ())
+	if (!::init ())
 	{
 		panic ("init failed");
 	}
 
+	main_thread ();
 	// test
 	//kthread_new (thread_2);
 	//addr_space_t *addr_space = addr_space_new (0b111, 0b111);
