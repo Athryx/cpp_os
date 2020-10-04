@@ -26,7 +26,7 @@ ARC_THR=$ARC/thread
 ARC_CALL=$ARC/syscall
 ARC_SYNC=$ARC/sync
 
-C_FILES="$SRC/main.cpp $SRC/init.cpp $SRC/cxx.cpp $SRC/gdt.cpp $SRC/global.cpp $DR/vga_tty.cpp $DR/ps2.cpp $UTIL/io.cpp $UTIL/string.cpp $UTIL/math.cpp $UTIL/misc.cpp $TME/pit.cpp $SYNC/spinlock.cpp $MEM/mem.cpp $MEM/pmem.cpp $INT/pic.cpp $INT/int.cpp $CALL/syscall.cpp $ARC/common.cpp"
+C_FILES="$SRC/main.cpp $SRC/init.cpp $SRC/cxx.cpp $SRC/global.cpp $SRC/mb2.cpp $SRC/gdt.cpp $DR/vga_tty.cpp $DR/ps2.cpp $UTIL/io.cpp $UTIL/string.cpp $UTIL/math.cpp $UTIL/misc.cpp $TME/pit.cpp $SYNC/spinlock.cpp $MEM/mem.cpp $MEM/pmem.cpp $INT/pic.cpp $INT/int.cpp $CALL/syscall.cpp $ARC/common.cpp"
 
 ASM_FILES="$SRC/resources.asm $ARC/mb2.asm $ARC/boot.asm $ARC/long_init.asm $ARC/common.asm $ARC/special.asm $ARC_THR/thread.asm $ARC_CALL/syscall.asm $ARC_SYNC/spinlock.asm"
 
@@ -125,11 +125,11 @@ then
 	grub-mkrescue -d /usr/lib/grub/i386-pc -o $BUILDDIR/kernel.iso $BUILDDIR/iso
 	echo kernel built
 
-	[[ $1 = run ]] && qemu-system-x86_64 -m 1024 -cdrom $BUILDDIR/kernel.iso
+	[[ $1 = run ]] && qemu-system-x86_64 -m 5120 -cdrom $BUILDDIR/kernel.iso
 
 	if [[ $1 = debug ]]
 	then
-		qemu-system-x86_64 -serial stdio -s -S $BUILDDIR/kernel.iso & termite -e "gdb -x debug.gdb"
+		qemu-system-x86_64 -m 5120 -serial stdio -s -S $BUILDDIR/kernel.iso & termite -e "gdb -x debug.gdb"
 	fi
 
 	if [[ $1 = bochs ]]

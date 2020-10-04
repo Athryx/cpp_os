@@ -64,6 +64,9 @@ namespace pmem
 			void *realloc (void *mem, usize n);
 			// frees memory pointed to by mem, if the memory is allocated
 			void free (void *mem);
+
+			usize start_addr;
+			usize end_addr;
 		private:
 			// all private function that reqpuire address may break if passed address is out of bounds
 			u8 get_order (usize n);
@@ -80,8 +83,6 @@ namespace pmem
 
 			order_list lists[MAX_SUPPERTED_MEM_BITS];
 
-			usize start_addr;
-			usize end_addr;
 			usize end_meta;
 			usize first_order_size;
 			u8 fo_bits;

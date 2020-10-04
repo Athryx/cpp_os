@@ -8,7 +8,9 @@
 
 namespace mem
 {
-	void init ();
+	// returns new location of mb2 table
+	void *init (void *mb2_table);
 	void *alloc (usize n);
+	void *realloc (void *mem, usize n);
 	void free (void *mem);
 }

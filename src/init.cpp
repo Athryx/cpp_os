@@ -13,10 +13,7 @@
 
 static void double_fault (struct int_data* data, error_code_t error_code);
 static void kbd_p (struct int_data* data, error_code_t error_code);
-u8 init (void);
-
-void test_cs (u16 in);
-void test_int (void);
+u8 init (void *mb2_table);
 
 
 static void double_fault (struct int_data* data, error_code_t error_code)
@@ -37,7 +34,7 @@ static void kbd_p (struct int_data* data, error_code_t error_code)
 		kprintf ("%s", s);
 }
 
-u8 init (void)
+u8 init (void *mb2_table)
 {
 	vga_clear ();
 
@@ -55,7 +52,8 @@ u8 init (void)
 	reg_int_handler (EXC_DOUBLE_FAULT, double_fault, true);
 	reg_int_handler (EXC_PAGE_FAULT, page_fault, false);
 
-	mem::init ();
+	// mem::init will move mb2_table
+	mb2_table = mem::init (mb2_table);
 
 	// temporary
 	kbd_init ();

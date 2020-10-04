@@ -95,12 +95,12 @@ void main_thread (void)
 	process_new (userspace_thread, NULL);*/
 }
 
-extern "C" [[ noreturn ]] void _start (void)
+extern "C" [[ noreturn ]] void _start (void *mb2_table)
 {
 	// bochs magic breakpoint for debugging
 	asm volatile ("xchgw %bx, %bx");
 
-	if (!::init ())
+	if (!::init (mb2_table))
 	{
 		panic ("init failed");
 	}

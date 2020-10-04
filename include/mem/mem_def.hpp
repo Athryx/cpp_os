@@ -17,7 +17,7 @@
 // this is default setting
 #define FIRST_ORDER_SIZE (PAGE_SIZE * 8)
 
-#define HEAP_SIZE (FIRST_ORDER_SIZE * 64)
+#define BUDDY_ALLOC_MIN_SIZE (FIRST_ORDER_SIZE * 2)
 
 extern usize TEXT_START;
 extern usize TEXT_END;

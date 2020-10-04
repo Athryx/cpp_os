@@ -43,7 +43,7 @@ void pallocator::init (usize start_addr, usize end_addr, usize first_order_size)
 	{
 		usize size = align_of (temp_s);
 		// this feels like a bad way to do it
-		while (size > this->end_addr)
+		while (size > this->end_addr - temp_s)
 			size >>= 1;
 
 		struct free_zone *zone = (struct free_zone *) temp_s;

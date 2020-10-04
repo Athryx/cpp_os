@@ -12,6 +12,8 @@ start:
 	cmp eax, 0x36d76289	; check for multiboot
 	jne .no_multiboot
 
+	push ebx		; push mb2 table
+
 ; check for CPUID
 	pushfd			; put flags in eax
 	pop eax
@@ -68,8 +70,6 @@ start:
 	cmp ecx, 512
 	jl .map_PD_table	; map all 512 pages
 
-
-
 ; enable paging
 	mov eax, PML4_table	; move PML4 address to proper register
 	mov cr3, eax
@@ -86,7 +86,6 @@ start:
 	mov eax, cr0		; set paging bit in cr0
 	or eax, 1 << 31
 	mov cr0, eax
-
 
 ; load 64 bit gdt and start long mode code
 	lgdt [gdt64.pointer]

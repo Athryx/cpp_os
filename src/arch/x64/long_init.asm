@@ -27,6 +27,11 @@ higher_half_start:
 	mov rax, KERNEL_VMA
 	add rsp, rax
 
+; adjust mb2 information pointer to be in higher half address space, and move to first argument
+	mov edi, dword [rsp]
+	add rsp, 4
+	add rdi, rax
+
 ; unmap lower half
 	mov qword [PML4_table], 0
 
