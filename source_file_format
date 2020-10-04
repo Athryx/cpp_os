@@ -9,4 +9,66 @@ function implementations
 main
 bottom:
 
+
+
+hpp format:
+top:
+#pragma once
+include types
+include others
+
+
+defines
+
+
+macros
+
+
+namespace
+{
+	types
+
+
+	extern global_variable
+
+
+	functions
+}
+bottom:
+
+
+cpp format:
+top:
+include hpp
+include types
+include others
+
+
+defines
+
+
+macros
+
+
+using namespace;
+
+
+types
+
+
+globals
+
+
+function declarations, if needed
+
+
+method implementations, 1 newline between each, 2 newlines between separate cless methods
+preferably in order declared in class
+
+
+function implementations
+
+main
+bottom:
+
 two newlines between each section

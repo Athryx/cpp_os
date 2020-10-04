@@ -2,7 +2,7 @@
 #include <types.hpp>
 
 
-pallocator allocator;
+pmem::pallocator allocator;
 
 usize text_start;
 usize text_end;
