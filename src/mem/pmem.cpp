@@ -7,7 +7,7 @@
 #include <util/io.hpp>
 
 
-using namespace pmem;
+using namespace mem;
 
 
 pallocator::pallocator (usize start_addr, usize end_addr, usize first_order_size)
@@ -78,10 +78,15 @@ void *pallocator::alloc (usize n)
 	return out;
 }
 
+void *pallocator::oalloc (u8 order)
+{
+	return alloc (get_order_size (order));
+}
+
 void *pallocator::realloc (void *mem, usize n)
 {
 	usize m = (usize) mem;
-	if (m < start_addr || m > end_addr)
+	if (m < start_addr || m >= end_addr)
 		return NULL;
 
 	struct metadata *meta = get_meta (m);
@@ -90,7 +95,7 @@ void *pallocator::realloc (void *mem, usize n)
 
 	u8 order = meta->order;
 	u8 n_order = get_order (n);
-	usize len = size (order);
+	usize len = get_order_size (order);
 	m = align_down (m, len);
 
 	if (n_order == order)
@@ -98,6 +103,7 @@ void *pallocator::realloc (void *mem, usize n)
 
 	if (n_order < order)
 	{
+		// free extra space
 		struct free_zone *zone = (struct free_zone *) m;
 		lists[order].remove_p (zone);
 		while (order > n_order)
@@ -118,44 +124,47 @@ void *pallocator::realloc (void *mem, usize n)
 		return (void *) m;
 	}
 
-	if (n_order > order)
+	// get trailing space after allocation
+	usize space = get_space (m + len);
+	// align of check is due to restrictions of alloctor
+	if (n <= space && align_of (m) >= get_order_size (n_order))
 	{
-		// get trailing space after allocation
-		usize space = get_space (m + len);
-		// align of check is due to restrictions of alloctor
-		if (n <= space && align_of (m) >= size (n_order))
+		// allocate onto end
+		usize len = get_order_size (order);
+		while (order < n_order)
 		{
-			// allocate onto end
-			usize len = size (order);
-			while (order < n_order)
-			{
-				lists[order].remove_p ((struct free_zone *) (m ^ len));
-				len <<= 1;
-				order ++;
-			}
-
-			struct free_zone *zone = (struct free_zone *) m;
-			zone->n = len;
-			meta->order = n_order;
+			lists[order].remove_p ((struct free_zone *) (m ^ len));
+			len <<= 1;
+			order ++;
 		}
-		else
-		{
-			// move memory contents to new zone
-			void *out = alloc (n);
-			if (out == NULL)
-				return NULL;
 
-			memcpy (out, (void *) m, len);
-			free ((void *) m);
-			return out;
-		}
+		struct free_zone *zone = (struct free_zone *) m;
+		zone->n = len;
+		meta->order = n_order;
+		return (void *) m;
 	}
+	else
+	{
+		// move memory contents to new zone
+		void *out = alloc (n);
+		if (out == NULL)
+			return NULL;
+
+		memcpy (out, (void *) m, len);
+		free ((void *) m);
+		return out;
+	}
+}
+
+void *pallocator::orealloc (void *mem, u8 order)
+{
+	return realloc (mem, get_order_size (order));
 }
 
 void pallocator::free (void *mem)
 {
 	usize m = (usize) mem;
-	if (m < start_addr || m > end_addr)
+	if (m < start_addr || m >= end_addr)
 		return;
 
 	struct metadata *meta = get_meta (m);
@@ -166,7 +175,7 @@ void pallocator::free (void *mem)
 	meta->alloced = 0;
 	u8 order = meta->order;
 	// might be wrong
-	m = align_down (m, size (order));
+	m = align_down (m, get_order_size (order));
 
 	struct free_zone *zone = (struct free_zone *) m;
 	// necessary for merge_order function
@@ -207,10 +216,10 @@ void pallocator::merge_order (usize addr, u8 order, u8 m_order)
 	if (order > m_order)
 		return;
 
-	usize order_s = size (order);
+	usize order_s = get_order_size (order);
 	usize m = addr ^ order_s;
 	// make sure buddy address is in bounds
-	if (m < start_addr || m + order_s > end_addr)
+	if (m < start_addr || m + order_s >= end_addr)
 		return;
 
 	struct metadata *meta = get_meta (m);
@@ -238,7 +247,7 @@ struct metadata *pallocator::get_meta (usize addr)
 
 usize pallocator::get_space (usize addr)
 {
-	if (addr < start_addr || addr > end_addr)
+	if (addr < start_addr || addr >= end_addr)
 		return 0;
 
 	usize out = 0;
@@ -246,11 +255,11 @@ usize pallocator::get_space (usize addr)
 
 	while (!meta->alloced)
 	{
-		usize len = size (meta->order);
+		usize len = get_order_size (meta->order);
 		out += len;
 		addr += len;
 
-		if (addr > end_addr)
+		if (addr >= end_addr)
 			return out;
 
 		meta = get_meta (addr);

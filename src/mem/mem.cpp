@@ -16,8 +16,8 @@ struct __attribute__ ((packed)) mmap_entry
 };
 
 
-pmem::pallocator allocator;
-pmem::pallocator *allocators;
+mem::pallocator allocator;
+mem::pallocator *allocators;
 usize allocator_len = 0;
 
 usize text_start;
@@ -33,7 +33,7 @@ usize kernel_vma;
 usize kernel_lma;
 
 
-u8 init_allocator (pmem::pallocator *allocer, struct mmap_entry *entry);
+u8 init_allocator (mem::pallocator *allocer, struct mmap_entry *entry);
 
 
 void *mem::init (void *mb2_table)
@@ -67,7 +67,7 @@ void *mem::init (void *mb2_table)
 		{
 			init_allocator (&allocator, mmap + i);
 			// make sure this is enough in future
-			allocators = (pmem::pallocator *) allocator.alloc (1);
+			allocators = (mem::pallocator *) allocator.alloc (1);
 		}
 		else
 		{
@@ -80,26 +80,26 @@ void *mem::init (void *mb2_table)
 	return mb2_table;
 }
 
-u8 init_allocator (pmem::pallocator *allocer, struct mmap_entry *entry)
+u8 init_allocator (mem::pallocator *allocer, struct mmap_entry *entry)
 {
 	u8 out = 0;
 
 	bool f = true;
-	if (text_start >= entry->addr && text_start <= entry->addr + entry->len - 1)
+	if (text_start >= entry->addr && text_start < entry->addr + entry->len)
 	{
 		if (text_start - entry->addr >= BUDDY_ALLOC_MIN_SIZE)
 		{
-			out = 1;
+			out ++;
 			allocer->init (entry->addr, text_start - 1, FIRST_ORDER_SIZE);
 		}
 		f = false;
 	}
 
-	if (kernel_end >= entry->addr && kernel_end <= entry->addr + entry->len - 1)
+	if (kernel_end >= entry->addr && kernel_end < entry->addr + entry->len)
 	{
 		if ((entry->addr + entry->len - 1) - kernel_end >= BUDDY_ALLOC_MIN_SIZE)
 		{
-			out = 1;
+			out ++;
 			allocer->init (kernel_end + 1, entry->addr + entry->len - 1, FIRST_ORDER_SIZE);
 		}
 		f = false;
@@ -133,7 +133,7 @@ void *mem::alloc (usize n)
 void *mem::realloc (void *mem, usize n)
 {
 	usize m = (usize) mem;
-	if (m > allocator.start_addr && m < allocator.end_addr)
+	if (m > allocator.get_start_addr () && m < allocator.get_end_addr ())
 	{
 		return allocator.realloc (mem, n);
 	}
@@ -141,7 +141,7 @@ void *mem::realloc (void *mem, usize n)
 	{
 		for (usize i = 0; i < allocator_len; i ++)
 		{
-			if (m > allocators[i].start_addr && m < allocators[i].end_addr)
+			if (m > allocators[i].get_start_addr () && m < allocators[i].get_end_addr ())
 			{
 				return allocators[i].realloc (mem, n);
 			}
@@ -154,7 +154,7 @@ void *mem::realloc (void *mem, usize n)
 void mem::free (void *mem)
 {
 	usize m = (usize) mem;
-	if (m > allocator.start_addr && m < allocator.end_addr)
+	if (m > allocator.get_start_addr () && m < allocator.get_end_addr ())
 	{
 		allocator.free (mem);
 	}
@@ -162,7 +162,7 @@ void mem::free (void *mem)
 	{
 		for (usize i = 0; i < allocator_len; i ++)
 		{
-			if (m > allocators[i].start_addr && m < allocators[i].end_addr)
+			if (m > allocators[i].get_start_addr () && m < allocators[i].get_end_addr ())
 			{
 				allocators[i].free (mem);
 				return;

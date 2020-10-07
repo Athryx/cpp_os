@@ -5,7 +5,7 @@
 #include <mem/mem_def.hpp>
 
 
-namespace pmem
+namespace mem
 {
 	struct free_zone
 	{
@@ -59,14 +59,22 @@ namespace pmem
 			// all pointers to realloc and free must be pointing within the first zone of the allocation
 			// allocates at least n bytes, returns null if allocation failed
 			void *alloc (usize n);
+			// allocate 1 order worth of memory
+			void *oalloc (u8 order);
 			// resizes memory pointed to by mem to at least n bytes, returns null if invalid arguments or new allocation failed. If new allocation failed, old memory will still be allocated
 			// untested
+			// i don't think its finished, but I might have finished
 			void *realloc (void *mem, usize n);
+			// reallocate to 1 order worth of memory
+			void *orealloc (void *mem, u8 order);
 			// frees memory pointed to by mem, if the memory is allocated
 			void free (void *mem);
 
-			usize start_addr;
-			usize end_addr;
+			inline usize get_start_addr () { return start_addr; }
+			inline usize get_end_addr () { return end_addr; }
+			inline usize get_first_order_size () { return first_order_size; }
+			inline usize get_order_size (u8 order) { return 1 << (order + fo_bits); }
+
 		private:
 			// all private function that reqpuire address may break if passed address is out of bounds
 			u8 get_order (usize n);
@@ -79,10 +87,11 @@ namespace pmem
 			// returns amount of consecutive free bytes starting at memory region pointed to by addr
 			usize get_space (usize addr);
 
-			inline usize size (u8 order) { return 1 << (order + fo_bits); }
 
 			order_list lists[MAX_SUPPERTED_MEM_BITS];
 
+			usize start_addr;
+			usize end_addr;
 			usize end_meta;
 			usize first_order_size;
 			u8 fo_bits;
