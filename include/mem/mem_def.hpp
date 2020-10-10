@@ -6,6 +6,8 @@
 
 #ifdef x64
 
+#define MAX_MEM_NODES 4
+
 // 256 gibibytes
 #define MAX_SUPPERTED_MEM (1 << 38)
 #define MAX_SUPPERTED_MEM_BITS 39

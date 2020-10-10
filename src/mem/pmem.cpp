@@ -63,6 +63,10 @@ void *pallocator::alloc (usize n)
 		return NULL;
 
 	u8 order = get_order (n);
+
+	if (order > max_order)
+		return NULL;
+
 	if (!lists[order].len)
 		populate_order (order + 1);
 
@@ -80,6 +84,8 @@ void *pallocator::alloc (usize n)
 
 void *pallocator::oalloc (u8 order)
 {
+	if (order > max_order)
+		return NULL;
 	return alloc (get_order_size (order));
 }
 
@@ -95,6 +101,9 @@ void *pallocator::realloc (void *mem, usize n)
 
 	u8 order = meta->order;
 	u8 n_order = get_order (n);
+	if (n_order > max_order)
+		return NULL;
+
 	usize len = get_order_size (order);
 	m = align_down (m, len);
 
@@ -148,7 +157,11 @@ void *pallocator::realloc (void *mem, usize n)
 		// move memory contents to new zone
 		void *out = alloc (n);
 		if (out == NULL)
-			return NULL;
+		{
+			out = mem::alloc (n);
+			if (out == NULL)
+				return NULL;
+		}
 
 		memcpy (out, (void *) m, len);
 		free ((void *) m);
@@ -158,6 +171,8 @@ void *pallocator::realloc (void *mem, usize n)
 
 void *pallocator::orealloc (void *mem, u8 order)
 {
+	if (order > max_order)
+		return NULL;
 	return realloc (mem, get_order_size (order));
 }
 
@@ -178,7 +193,9 @@ void pallocator::free (void *mem)
 	m = align_down (m, get_order_size (order));
 
 	struct free_zone *zone = (struct free_zone *) m;
+
 	// necessary for merge_order function
+	zone->n = get_order_size (order);
 	lists[order].append (zone);
 
 	merge_order (m, order, max_order);
@@ -219,7 +236,8 @@ void pallocator::merge_order (usize addr, u8 order, u8 m_order)
 	usize order_s = get_order_size (order);
 	usize m = addr ^ order_s;
 	// make sure buddy address is in bounds
-	if (m < start_addr || m + order_s >= end_addr)
+	// greater than, not greater than equal
+	if (m < start_addr || m + order_s > end_addr)
 		return;
 
 	struct metadata *meta = get_meta (m);
@@ -229,6 +247,10 @@ void pallocator::merge_order (usize addr, u8 order, u8 m_order)
 
 	struct free_zone *z_first = (struct free_zone *) min(addr, m);
 	struct free_zone *z_second = (struct free_zone *) max(addr, m);
+
+	// make sure buddy is same size
+	if (z_first->n != z_second->n)
+		return;
 
 	lists[order].remove_p (z_first);
 	lists[order].remove_p (z_second);

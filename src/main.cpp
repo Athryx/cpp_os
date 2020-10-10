@@ -63,8 +63,40 @@ void main_thread (void)
 	free (e);
 
 	kprintf ("addresses: a: %x, b: %x, c: %x, d: %x, e: %x\n", a, b, c, d, e);
+	// currently first part works
 
-	kprintf ("hi\n");
+	void *a1 = oalloc (2);
+	void *a2 = oalloc (2);
+	void *a3 = oalloc (5);
+	void *a4 = oalloc (0);
+	void *a5 = oalloc (1);
+	void *a6 = oalloc (3);
+
+	free (a2);
+	free (a2);
+
+	void *a1_old = a1;
+
+	a1 = orealloc (a1, 4);
+
+	free (a3);
+
+	void *a7 = alloc (25);
+	a5 = orealloc (a5, 2);
+
+	void *a8 = oalloc (1);
+
+	void *a9 = oalloc (255);
+
+	free (a1_old);
+	free (a1);
+	free (a4);
+	free (a5);
+	free (a6);
+	free (a7);
+	free (a8);
+	free (a9);
+
 
 	/*int *a = (int *) kalloc (1);
 
@@ -93,6 +125,7 @@ void main_thread (void)
 
 	// will fail
 	process_new (userspace_thread, NULL);*/
+	kprintf ("didn't crash");
 }
 
 extern "C" [[ noreturn ]] void _start (void *mb2_table)

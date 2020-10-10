@@ -16,8 +16,7 @@ struct __attribute__ ((packed)) mmap_entry
 };
 
 
-mem::pallocator allocator;
-mem::pallocator *allocators;
+mem::pallocator allocators[MAX_MEM_NODES];
 usize allocator_len = 0;
 
 usize text_start;
@@ -54,8 +53,7 @@ void *mem::init (void *mb2_table)
 	usize len = (((u32 *) mmap_header)[1] - 16) / 24;
 	struct mmap_entry *mmap = (struct mmap_entry *) (((u8 *) mmap_header) + 16);
 
-	u8 alloc_i = 0;
-	for (usize i = 0; i < len; i ++)
+	for (usize i = 0; i < len && allocator_len < MAX_MEM_NODES; i ++)
 	{
 		// if not regular memory
 		if (mmap[i].type != 1 || mmap[i].len < BUDDY_ALLOC_MIN_SIZE)
@@ -63,18 +61,10 @@ void *mem::init (void *mb2_table)
 
 		mmap[i].addr += kernel_vma;
 
-		if (alloc_i == 0)
-		{
-			init_allocator (&allocator, mmap + i);
-			// make sure this is enough in future
-			allocators = (mem::pallocator *) allocator.alloc (1);
-		}
-		else
-		{
-			allocator_len += init_allocator (allocators + (i - 1), mmap + i);
-		}
+		allocator_len += init_allocator (allocators + allocator_len, mmap + i);
 
-		alloc_i ++;
+		if (allocator_len > MAX_MEM_NODES)
+			panic ("incorrect build parameter for MAX_MEM_NODES");
 	}
 
 	return mb2_table;
@@ -116,15 +106,27 @@ u8 init_allocator (mem::pallocator *allocer, struct mmap_entry *entry)
 
 void *mem::alloc (usize n)
 {
-	void *out = allocator.alloc (n);
-	if (out == NULL)
+	void *out = NULL;
+
+	for (usize i = 0; i < allocator_len; i ++)
 	{
-		for (usize i = 0; i < allocator_len; i ++)
-		{
-			out = allocators[i].alloc (n);
-			if (out != NULL)
-				return out;
-		}
+		out = allocators[i].alloc (n);
+		if (out != NULL)
+			return out;
+	}
+
+	return out;
+}
+
+void *mem::oalloc (u8 n)
+{
+	void *out = NULL;
+
+	for (usize i = 0; i < allocator_len; i ++)
+	{
+		out = allocators[i].oalloc (n);
+		if (out != NULL)
+			return out;
 	}
 
 	return out;
@@ -133,18 +135,27 @@ void *mem::alloc (usize n)
 void *mem::realloc (void *mem, usize n)
 {
 	usize m = (usize) mem;
-	if (m > allocator.get_start_addr () && m < allocator.get_end_addr ())
+
+	for (usize i = 0; i < allocator_len; i ++)
 	{
-		return allocator.realloc (mem, n);
-	}
-	else
-	{
-		for (usize i = 0; i < allocator_len; i ++)
+		if (m >= allocators[i].get_start_addr () && m < allocators[i].get_end_addr ())
 		{
-			if (m > allocators[i].get_start_addr () && m < allocators[i].get_end_addr ())
-			{
-				return allocators[i].realloc (mem, n);
-			}
+			return allocators[i].realloc (mem, n);
+		}
+	}
+
+	return NULL;
+}
+
+void *mem::orealloc (void *mem, u8 n)
+{
+	usize m = (usize) mem;
+
+	for (usize i = 0; i < allocator_len; i ++)
+	{
+		if (m >= allocators[i].get_start_addr () && m < allocators[i].get_end_addr ())
+		{
+			return allocators[i].orealloc (mem, n);
 		}
 	}
 
@@ -154,19 +165,13 @@ void *mem::realloc (void *mem, usize n)
 void mem::free (void *mem)
 {
 	usize m = (usize) mem;
-	if (m > allocator.get_start_addr () && m < allocator.get_end_addr ())
+
+	for (usize i = 0; i < allocator_len; i ++)
 	{
-		allocator.free (mem);
-	}
-	else
-	{
-		for (usize i = 0; i < allocator_len; i ++)
+		if (m >= allocators[i].get_start_addr () && m < allocators[i].get_end_addr ())
 		{
-			if (m > allocators[i].get_start_addr () && m < allocators[i].get_end_addr ())
-			{
-				allocators[i].free (mem);
-				return;
-			}
+			allocators[i].free (mem);
+			return;
 		}
 	}
 }
