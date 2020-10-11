@@ -44,4 +44,19 @@ r15: arg 10, saved if unused
 8: reg
 
 
-9: notify
+9: usize notify (char *eid | usize pid, usize a1, usize a2, usize a3, usize a4, usize a5, | usize a6, | usize a7, | usize a8, | uszie a9)
+
+
+options:
+bit 0 (notify_pid):
+0: send message to all processes with executable id specified in arg
+1: send message to process with pid
+
+bit 1 (notify_eargs):
+0: send args a1 to a5 to process
+1: send args a1 to a9 to process, a6 to a9 may not be saved
+
+
+return value:
+0: success
+1: no process with eid or pid exists
