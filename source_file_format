@@ -17,6 +17,7 @@ top:
 
 
 include types
+include cxx
 include others
 
 
@@ -43,6 +44,7 @@ cpp format:
 top:
 include hpp
 include types
+include cxx
 include others
 
 

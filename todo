@@ -1,4 +1,12 @@
+Memory:
+
 figure out why anything past first page isn't working
+
 test pallocator realloc function better
 have max order be dynamically updated depending on free memory
-have realloc in pallocator be able to call alloc from other memory zones
+
+better memory zone handling than just global alloc function
+
+use linked_list class in pallocator
+
+make slab allocator

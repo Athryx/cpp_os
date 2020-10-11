@@ -138,12 +138,14 @@ extern "C" [[ noreturn ]] void _start (void *mb2_table)
 		panic ("init failed");
 	}
 
-	main_thread ();
+	//main_thread ();
 	// test
 	//kthread_new (thread_2);
 	//addr_space_t *addr_space = addr_space_new (0b111, 0b111);
 	//virt_map (addr_space, kernel_vma, kernel_vma, ADDR_SPACE_LEN_PAGE, addr_space->p_flags);
 	//process_new (userspace_thread, addr_space);
+
+	kprintf ("epoch v0.0.1\n");
 
 	// add extra space on rsp incase an interupt occurs at a very unlucky time in sti_safe
 	global::sys_rsp[CPU_I] = align_up (get_rsp () + 0x40, 16);
