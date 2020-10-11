@@ -80,7 +80,7 @@ u8 init_allocator (mem::pallocator *allocer, struct mmap_entry *entry)
 		if (text_start - entry->addr >= BUDDY_ALLOC_MIN_SIZE)
 		{
 			out ++;
-			allocer->init (entry->addr, text_start - 1, FIRST_ORDER_SIZE);
+			allocer->init (entry->addr, text_start - 1, PAGE_SIZE);
 		}
 		f = false;
 	}
@@ -90,14 +90,14 @@ u8 init_allocator (mem::pallocator *allocer, struct mmap_entry *entry)
 		if ((entry->addr + entry->len - 1) - kernel_end >= BUDDY_ALLOC_MIN_SIZE)
 		{
 			out ++;
-			allocer->init (kernel_end + 1, entry->addr + entry->len - 1, FIRST_ORDER_SIZE);
+			allocer->init (kernel_end + 1, entry->addr + entry->len - 1, PAGE_SIZE);
 		}
 		f = false;
 	}
 
 	if (f)
 	{
-		allocer->init (entry->addr, entry->addr + entry->len - 1, FIRST_ORDER_SIZE);
+		allocer->init (entry->addr, entry->addr + entry->len - 1, PAGE_SIZE);
 		out = 1;
 	}
 

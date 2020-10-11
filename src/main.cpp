@@ -138,7 +138,7 @@ extern "C" [[ noreturn ]] void _start (void *mb2_table)
 		panic ("init failed");
 	}
 
-	//main_thread ();
+	main_thread ();
 	// test
 	//kthread_new (thread_2);
 	//addr_space_t *addr_space = addr_space_new (0b111, 0b111);
