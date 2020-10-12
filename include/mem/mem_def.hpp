@@ -15,6 +15,14 @@
 #define PAGE_SIZE ((usize) 4096)
 #define PAGE_BITS 12
 
+// 2 MiB
+#define BIG_PAGE_SIZE (PAGE_SIZE << 9)
+#define BIG_PAGE_BITS 21
+
+// 1 GiB
+#define HUGE_PAGE_SIZE (BIG_PAGE_SIZE << 9)
+#define HUGE_PAGE_BITS 30
+
 // 15 bits of address used in first order size, 32 KiB
 // this is default setting
 #define FIRST_ORDER_SIZE (PAGE_SIZE * 8)

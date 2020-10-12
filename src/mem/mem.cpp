@@ -118,6 +118,20 @@ void *mem::alloc (usize n)
 	return out;
 }
 
+void *mem::allocz (usize n)
+{
+	void *out = NULL;
+
+	for (usize i = 0; i < allocator_len; i ++)
+	{
+		out = allocators[i].allocz (n);
+		if (out != NULL)
+			return out;
+	}
+
+	return out;
+}
+
 void *mem::oalloc (u8 n)
 {
 	void *out = NULL;
@@ -125,6 +139,20 @@ void *mem::oalloc (u8 n)
 	for (usize i = 0; i < allocator_len; i ++)
 	{
 		out = allocators[i].oalloc (n);
+		if (out != NULL)
+			return out;
+	}
+
+	return out;
+}
+
+void *mem::oallocz (u8 n)
+{
+	void *out = NULL;
+
+	for (usize i = 0; i < allocator_len; i ++)
+	{
+		out = allocators[i].oallocz (n);
 		if (out != NULL)
 			return out;
 	}

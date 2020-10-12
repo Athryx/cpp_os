@@ -59,8 +59,12 @@ namespace mem
 			// all pointers to realloc and free must be pointing within the first zone of the allocation
 			// allocates at least n bytes, returns null if allocation failed
 			void *alloc (usize n);
+			// allocate and zero memory
+			void *allocz (usize n);
 			// allocate 1 order worth of memory
 			void *oalloc (u8 order);
+			// allocate orders of memory and zero
+			void *oallocz (u8 order);
 			// resizes memory pointed to by mem to at least n bytes, returns null if invalid arguments or new allocation failed. If new allocation failed, old memory will still be allocated
 			// untested
 			// i don't think its finished, but I might have finished

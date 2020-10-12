@@ -59,12 +59,19 @@ void pallocator::init (usize start_addr, usize end_addr, usize first_order_size)
 
 void *pallocator::alloc (usize n)
 {
-	if (n == 0)
-		return NULL;
+	return oalloc (get_order (n));
+}
 
-	u8 order = get_order (n);
+void *pallocator::allocz (usize n)
+{
+	void *out = alloc (n);
+	memset (out, n, 0);
+	return out;
+}
 
-	if (order > max_order)
+void *pallocator::oalloc (u8 order)
+{
+	if (order > max_order || order == 0)
 		return NULL;
 
 	if (!lists[order].len)
@@ -82,11 +89,11 @@ void *pallocator::alloc (usize n)
 	return out;
 }
 
-void *pallocator::oalloc (u8 order)
+void *pallocator::oallocz (u8 order)
 {
-	if (order > max_order)
-		return NULL;
-	return alloc (get_order_size (order));
+	void *out = oalloc (order);
+	memset (out, get_order_size (order), 0);
+	return out;
 }
 
 void *pallocator::realloc (void *mem, usize n)

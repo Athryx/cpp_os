@@ -54,6 +54,7 @@ defines
 macros
 
 
+// avoid if possible
 using namespace;
 
 
