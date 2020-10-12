@@ -3,41 +3,14 @@
 
 #include <types.hpp>
 #include <mem/mem_def.hpp>
+#include <util/linked_list.hpp>
 
 
 namespace mem
 {
-	struct free_zone
+	struct free_zone : public util::list_node
 	{
-		struct free_zone *prev;
-		struct free_zone *next;
 		usize n;
-	};
-
-	// need special linked list to keep track of free zones in each order
-	class order_list
-	{
-		public:
-			order_list ();
-
-			bool prepend (struct free_zone *zone);
-			bool append (struct free_zone *zone);
-			bool insert (usize index, struct free_zone *zone);
-
-			struct free_zone *pop_start ();
-			struct free_zone *pop ();
-			struct free_zone *remove (usize index);
-
-			void remove_p (struct free_zone *zone);
-
-			struct free_zone *get (usize index);
-
-			usize len;
-		private:
-			struct free_zone *start;
-			struct free_zone *end;
-			struct free_zone *current;
-			usize current_i;
 	};
 
 	struct __attribute__ ((packed)) metadata
@@ -92,7 +65,7 @@ namespace mem
 			usize get_space (usize addr);
 
 
-			order_list lists[MAX_SUPPERTED_MEM_BITS];
+			util::linked_list lists[MAX_SUPPERTED_MEM_BITS];
 
 			usize start_addr;
 			usize end_addr;
