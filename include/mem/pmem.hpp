@@ -4,6 +4,7 @@
 #include <types.hpp>
 #include <mem/mem_def.hpp>
 #include <util/linked_list.hpp>
+#include <util/math.hpp>
 
 
 namespace mem
@@ -50,11 +51,16 @@ namespace mem
 			inline usize get_start_addr () { return start_addr; }
 			inline usize get_end_addr () { return end_addr; }
 			inline usize get_first_order_size () { return first_order_size; }
+			inline usize get_free_space () { return free_space; }
 			inline usize get_order_size (u8 order) { return 1 << (order + fo_bits); }
+			inline u8 get_order (usize n)
+			{
+				u8 temp = log2_up (n);
+				return temp >= fo_bits ? temp - fo_bits : 0;
+			}
 
 		private:
 			// all private function that reqpuire address may break if passed address is out of bounds
-			u8 get_order (usize n);
 			// if called on already populated order, will populate one below
 			bool populate_order (u8 order);
 			void merge_order (usize addr, u8 order, u8 m_order);
@@ -71,6 +77,7 @@ namespace mem
 			usize end_addr;
 			usize end_meta;
 			usize first_order_size;
+			usize free_space;
 			u8 fo_bits;
 			u8 max_order;
 	};

@@ -7,6 +7,6 @@ have max order be dynamically updated depending on free memory
 
 better memory zone handling than just global alloc function
 
-use linked_list class in pallocator
-
 make slab allocator
+
+make delete work with kernel allocator

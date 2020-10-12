@@ -9,6 +9,7 @@
 #include <arch/x64/common.hpp>
 #include <syscall.hpp>
 #include <mem/mem.hpp>
+#include <mem/kmem.hpp>
 
 
 static void double_fault (struct int_data* data, error_code_t error_code);
@@ -54,6 +55,8 @@ u8 init (void *mb2_table)
 
 	// mem::init will move mb2_table
 	mb2_table = mem::init (mb2_table);
+
+	mem::kmem_init ();
 
 	// temporary
 	kbd_init ();

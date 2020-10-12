@@ -30,9 +30,10 @@ namespace util
 
 			list_node *get (usize index);
 
-			usize len;
+			inline usize get_len () { return len; }
 
 		private:
+			usize len;
 			list_node *start;
 			list_node *end;
 			list_node *current;

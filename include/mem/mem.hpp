@@ -17,4 +17,7 @@ namespace mem
 	void *realloc (void *mem, usize n);
 	void *orealloc (void *mem, u8 n);
 	void free (void *mem);
+	usize get_free_space ();
+	u8 get_order (usize n);
+	usize get_order_size (u8 order);
 }

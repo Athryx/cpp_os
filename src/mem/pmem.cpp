@@ -2,7 +2,6 @@
 #include <types.hpp>
 #include <mem/mem.hpp>
 #include <util/misc.hpp>
-#include <util/math.hpp>
 #include <util/string.hpp>
 #include <util/io.hpp>
 
@@ -17,6 +16,8 @@ pallocator::pallocator (usize start_addr, usize end_addr, usize first_order_size
 
 void pallocator::init (usize start_addr, usize end_addr, usize first_order_size)
 {
+	free_space = 0;
+
 	first_order_size = max(first_order_size, PAGE_SIZE);
 
 	usize temp_s = align_up (start_addr, first_order_size);
@@ -48,6 +49,7 @@ void pallocator::init (usize start_addr, usize end_addr, usize first_order_size)
 
 		struct free_zone *zone = (struct free_zone *) temp_s;
 		zone->n = size;
+		free_space += size;
 
 		u8 order_i = log2 (size) - fo_bits;
 		lists[order_i].append (zone);
@@ -76,7 +78,7 @@ void *pallocator::oalloc (u8 order)
 	if (order > max_order)
 		return NULL;
 
-	if (!lists[order].len)
+	if (!lists[order].get_len ())
 		populate_order (order + 1);
 
 	struct free_zone *out = (struct free_zone *) lists[order].pop ();
@@ -87,6 +89,7 @@ void *pallocator::oalloc (u8 order)
 	struct metadata *meta = get_meta ((usize) out);
 	meta->alloced = 1;
 	meta->order = order;
+	free_space -= get_order_size (order);
 
 	return out;
 }
@@ -210,18 +213,12 @@ void pallocator::free (void *mem)
 	merge_order (m, order, max_order);
 }
 
-u8 pallocator::get_order (usize n)
-{
-	u8 temp = log2_up (n);
-	return temp >= fo_bits ? temp - fo_bits : 0;
-}
-
 bool pallocator::populate_order (u8 order)
 {
 	if (order > max_order)
 		return false;
 
-	if (lists[order].len || populate_order (order + 1))
+	if (lists[order].get_len () || populate_order (order + 1))
 	{
 		// split zones
 		struct free_zone *zone = (struct free_zone *) lists[order].pop ();

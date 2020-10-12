@@ -203,3 +203,21 @@ void mem::free (void *mem)
 		}
 	}
 }
+
+usize mem::get_free_space ()
+{
+	usize out = 0;
+	for (usize i = 0; i < allocator_len; i ++)
+		out += allocators[i].get_free_space ();
+	return out;
+}
+
+u8 mem::get_order (usize n)
+{
+	return allocators[0].get_order (n);
+}
+
+usize mem::get_order_size (u8 order)
+{
+	return allocators[0].get_order_size (order);
+}
