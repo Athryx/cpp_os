@@ -130,7 +130,8 @@ then
 
 	if [[ $1 = debug ]]
 	then
-		qemu-system-x86_64 -m 5120 -serial stdio -s -S $BUILDDIR/kernel.iso & termite -e "gdb -x debug.gdb"
+		#termite qemu-system-x86_64 -m 5120 -debugcon stdio -s -S $BUILDDIR/kernel.iso & $TERM -e "gdb -x debug.gdb"
+		qemu-system-x86_64 -m 5120 -debugcon stdio -s -S $BUILDDIR/kernel.iso & $TERM -e "/bin/gdb" "-x" "debug.gdb"
 	fi
 
 	if [[ $1 = bochs ]]

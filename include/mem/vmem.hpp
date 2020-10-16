@@ -14,13 +14,22 @@ namespace mem
 		usize size;
 	};
 
-	struct virt_allocation : public util::list_node
+	struct virt_zone : public util::list_node
+	{
+		usize virt_addr;
+		usize len;
+	};
+
+	struct virt_allocation : public virt_zone
 	{
 		~virt_allocation ();
 
-		usize addr;
-		usize size;
 		util::array_list<struct phys_allocation> allocations;
+	};
+
+	struct phys_map : public virt_zone
+	{
+		usize phys_addr;
 	};
 
 	class addr_space
@@ -50,7 +59,13 @@ namespace mem
 		private:
 			void *map_alloc_data (struct virt_allocation *allocation);
 
+			// doesn't keep track of the mapped regions
+			void *map_internal (usize addr, usize n);
+			void *unmap_internal (void *mem);
+			usize find_address (util::linked_list &list, struct virt_zone &allocation);
+
 			usize pml4_table;
-			util::linked_list phys_allocs;
+			util::linked_list virt_allocs;
+			util::linked_list phys_maps;
 	};
 }
