@@ -17,6 +17,7 @@ namespace util
 	{
 		public:
 			array_list ();
+			~array_list ();
 
 			bool push (T in);
 			T pop ();
@@ -48,6 +49,12 @@ util::array_list<T>::array_list ()
 
 	capacity = ARRAY_LIST_INTIAL_CAPACITY;
 	len = 0;
+}
+
+template <typename T>
+util::array_list<T>::~array_list ()
+{
+	mem::kfree (list, capacity);
 }
 
 template <typename T>

@@ -29,6 +29,12 @@
 
 #define BUDDY_ALLOC_MIN_SIZE (FIRST_ORDER_SIZE * 2)
 
+#define PAGE_PRESENT 1
+#define PAGE_DATA_POS 0xf80ffffffffff1ff
+#define PAGE_ADDR_POS 0x0000fffffffff000
+
+#define MAX_PAGE_LEVEL 3
+
 extern usize TEXT_START;
 extern usize TEXT_END;
 extern usize RODATA_START;

@@ -29,7 +29,7 @@ ARC_UTIL=$ARC/util
 
 C_FILES="$SRC/main.cpp $SRC/init.cpp $SRC/cxx.cpp $SRC/global.cpp $SRC/mb2.cpp $SRC/gdt.cpp $DR/vga_tty.cpp $DR/ps2.cpp $UTIL/io.cpp $UTIL/string.cpp $UTIL/math.cpp $UTIL/misc.cpp $UTIL/linked_list.cpp $TME/pit.cpp $SYNC/spinlock.cpp $MEM/mem.cpp $MEM/pmem.cpp $MEM/vmem.cpp $MEM/kmem.cpp $MEM/slab.cpp $INT/pic.cpp $INT/int.cpp $CALL/syscall.cpp $ARC/common.cpp"
 
-ASM_FILES="$SRC/resources.asm $ARC/mb2.asm $ARC/boot.asm $ARC/long_init.asm $ARC/common.asm $ARC/special.asm $ARC_THR/thread.asm $ARC_CALL/syscall.asm $ARC_SYNC/spinlock.asm $ARC_UTIL/math.asm"
+ASM_FILES="$SRC/resources.asm $ARC/mb2.asm $ARC/boot.asm $ARC/long_init.asm $ARC/common.asm $ARC/special.asm $ARC_THR/thread.asm $ARC_CALL/syscall.asm $ARC_SYNC/spinlock.asm $ARC_UTIL/math.asm $ARC_UTIL/misc.asm"
 
 OUT_FILE=$BUILDDIR/iso/boot/kernel.bin
 
