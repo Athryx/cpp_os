@@ -49,6 +49,7 @@ namespace mem
 			// returns pointer to new virtual memory zone on success
 			// returns null on failure, and does not free any mamory pointed to by mem
 			// allocates and frees underlying physical memory as needed
+			// unfinished
 			void *realloc (void *mem, usize n);
 			// frees virtual address mem and any underlying pysical memory
 			void free (void *mem);
@@ -67,11 +68,12 @@ namespace mem
 			// returns true if success
 			bool map_internal (usize phys_addr, usize virt_addr, usize n);
 			// helper function
-			bool map_internal_recurse (usize phys_addr, usize virt_addr, usize start_page_n, usize &page_n, usize page_level, usize *page_table);
+			bool map_internal_recurse (usize phys_addr, usize &virt_addr, usize start_page_n, usize &page_n, usize page_level, usize *page_table);
 
 			void unmap_internal (usize virt_addr, usize n);
 			// helper function
-			void unmap_internal_recurse (usize virt_addr, usize n);
+			// returns true when page table it was examaning needss to be freed
+			bool unmap_internal_recurse (usize &virt_addr, usize &page_n, usize page_level, usize *page_table);
 
 			// adds n to page counter c
 			// page counter is stored in ignored bits of first entry in every page table data structure
@@ -83,6 +85,11 @@ namespace mem
 				usize temp2 = c & PAGE_DATA_POS;
 				c = (get_bits (temp, 3, 9) << 52) | (get_bits (temp, 0, 2) << 9) | temp2;
 				return c;
+			}
+
+			inline usize page_counter_get (usize c)
+			{
+				return (get_bits (c, 52, 58) << 3) | get_bits (c, 9, 11);
 			}
 
 			// returns address to page it was set to

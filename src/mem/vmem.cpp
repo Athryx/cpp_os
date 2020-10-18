@@ -200,16 +200,19 @@ void *mem::addr_space::map_alloc_data (struct virt_allocation *allocation)
 bool mem::addr_space::map_internal (usize phys_addr, usize virt_addr, usize n)
 {
 	n = align_up (n, PAGE_SIZE) / PAGE_SIZE;
-	bool status = map_internal_recurse (phys_addr, virt_addr, n, n, MAX_PAGE_LEVEL, (usize *) pml4_table);
+	virt_addr &= PAGE_ADDR_POS;
+	bool status = map_internal_recurse (phys_addr, virt_addr, n, n, PAGE_LEVELS - 1, (usize *) pml4_table);
 	if (!status)
 	{
 		unmap_internal (virt_addr, n);
+		return false;
 	}
 	return true;
 }
 
-bool mem::addr_space::map_internal_recurse (usize phys_addr, usize virt_addr, usize start_page_n, usize &page_n, usize page_level, usize *page_table)
+bool mem::addr_space::map_internal_recurse (usize phys_addr, usize &virt_addr, usize start_page_n, usize &page_n, usize page_level, usize *page_table)
 {
+	// wrong
 	#ifdef x64
 	u16 i = get_bits (virt_addr, 39, 47);
 	virt_addr <<= 9;
@@ -217,6 +220,10 @@ bool mem::addr_space::map_internal_recurse (usize phys_addr, usize virt_addr, us
 
 	while (page_n)
 	{
+		// length was too long, or end of current page table
+		if (i >= PAGE_ENTRIES)
+			return page_level < PAGE_LEVELS - 1;
+
 		if (page_level)
 		{
 			usize page_table_p;
@@ -227,6 +234,7 @@ bool mem::addr_space::map_internal_recurse (usize phys_addr, usize virt_addr, us
 					return false;
 
 				page_table_p = page_set (page_table, i, temp);
+				page_counter_add (page_table[0], 1);
 			}
 			else
 			{
@@ -239,10 +247,12 @@ bool mem::addr_space::map_internal_recurse (usize phys_addr, usize virt_addr, us
 		}
 		else
 		{
+			if (!(page_table[i] & PAGE_PRESENT))
+				page_counter_add (page_table[0], 1);
+
 			page_set (page_table, i, phys_addr + PAGE_SIZE * (start_page_n - page_n));
 			page_n --;
 		}
-		page_counter_add (page_table[0], 1);
 		i ++;
 	}
 
@@ -251,10 +261,70 @@ bool mem::addr_space::map_internal_recurse (usize phys_addr, usize virt_addr, us
 
 void mem::addr_space::unmap_internal (usize virt_addr, usize n)
 {
+	n = align_up (n, PAGE_SIZE) / PAGE_SIZE;
+	virt_addr &= PAGE_ADDR_POS;
+	unmap_internal_recurse (virt_addr, n, PAGE_LEVELS - 1, (usize *) canonical_addr (pml4_table & PAGE_ADDR_POS));
 }
 
-void mem::addr_space::unmap_internal_recurse (usize virt_addr, usize n)
+bool mem::addr_space::unmap_internal_recurse (usize &virt_addr, usize &page_n, usize page_level, usize *page_table)
 {
+	#ifdef x64
+	u16 i = get_bits (virt_addr, 39, 47);
+	virt_addr <<= 9;
+	#endif
+
+	while (page_n)
+	{
+		// length was too long, or end of current page table
+		if (i >= PAGE_ENTRIES)
+			return false;
+
+		if (page_level)
+		{
+			if (!(page_table[i] & PAGE_PRESENT))
+			{
+				// adjust accounting info to be correct
+				usize page_n_sub = 1 << (PAGE_TABLE_BITS * page_level);
+				// avoid integer undeflow
+				if (page_n_sub >= page_n)
+					page_n = 0;
+				else
+					page_n -= page_n_sub;
+
+				virt_addr <<= PAGE_TABLE_BITS * page_level;
+			}
+			else if (unmap_internal_recurse (virt_addr, page_n, page_level - 1, (usize *) page_table[i]))
+			{
+				mem::free ((void *) (canonical_addr (page_table[i] & PAGE_ADDR_POS)));
+				page_counter_add (page_table[0], -1);
+			}
+		}
+		else
+		{
+			if (page_table[i] & PAGE_PRESENT)
+				page_counter_add (page_table[0], -1);
+
+			page_set (page_table, i, 0);
+			page_n --;
+		}
+
+		// free page this function call was examaning
+		if (page_counter_get (page_table[i]) == 0)
+		{
+			usize page_n_sub = PAGE_ENTRIES - i - 1;
+			// avoid integer underflow
+			if (page_n_sub >= page_n)
+				page_n = 0;
+			else
+				page_n -= page_n_sub;
+
+			return true;
+		}
+
+		i ++;
+	}
+
+	return false;
 }
 
 usize mem::addr_space::find_address (util::linked_list &list, struct virt_zone &allocation)

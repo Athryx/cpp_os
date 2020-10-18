@@ -33,7 +33,9 @@
 #define PAGE_DATA_POS 0xf80ffffffffff1ff
 #define PAGE_ADDR_POS 0x0000fffffffff000
 
-#define MAX_PAGE_LEVEL 3
+#define PAGE_LEVELS 4
+#define PAGE_ENTRIES 512
+#define PAGE_TABLE_BITS 9
 
 extern usize TEXT_START;
 extern usize TEXT_END;
