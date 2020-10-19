@@ -71,7 +71,7 @@ namespace mem
 			usize get_space (usize addr);
 
 
-			util::linked_list lists[MAX_SUPPERTED_MEM_BITS];
+			util::linked_list lists[MAX_SUPPORTED_MEM_BITS];
 
 			usize start_addr;
 			usize end_addr;

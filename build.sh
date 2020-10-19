@@ -15,21 +15,21 @@ ARC=$SRC/arch/$ARCH
 
 UTIL=$SRC/util
 MEM=$SRC/mem
-THR=$SRC/thread
+SCHED=$SRC/sched
 INT=$SRC/int
 DR=$SRC/driver
 TME=$SRC/time
 CALL=$SRC/syscall
 SYNC=$SRC/sync
 
-ARC_THR=$ARC/thread
+ARC_SCHED=$ARC/sched
 ARC_CALL=$ARC/syscall
 ARC_SYNC=$ARC/sync
 ARC_UTIL=$ARC/util
 
-C_FILES="$SRC/main.cpp $SRC/init.cpp $SRC/cxx.cpp $SRC/global.cpp $SRC/mb2.cpp $SRC/gdt.cpp $DR/vga_tty.cpp $DR/ps2.cpp $UTIL/io.cpp $UTIL/string.cpp $UTIL/math.cpp $UTIL/misc.cpp $UTIL/linked_list.cpp $TME/pit.cpp $SYNC/spinlock.cpp $MEM/mem.cpp $MEM/pmem.cpp $MEM/vmem.cpp $MEM/kmem.cpp $MEM/slab.cpp $INT/pic.cpp $INT/int.cpp $CALL/syscall.cpp $ARC/common.cpp"
+C_FILES="$SRC/main.cpp $SRC/init.cpp $SRC/cxx.cpp $SRC/global.cpp $SRC/mb2.cpp $SRC/gdt.cpp $DR/vga_tty.cpp $DR/ps2.cpp $UTIL/io.cpp $UTIL/string.cpp $UTIL/math.cpp $UTIL/misc.cpp $UTIL/linked_list.cpp $TME/pit.cpp $SYNC/spinlock.cpp $MEM/mem.cpp $MEM/pmem.cpp $MEM/vmem.cpp $MEM/kmem.cpp $MEM/slab.cpp $SCHED/process.cpp $SCHED/thread.cpp $INT/pic.cpp $INT/int.cpp $CALL/syscall.cpp $ARC/common.cpp"
 
-ASM_FILES="$SRC/resources.asm $ARC/mb2.asm $ARC/boot.asm $ARC/long_init.asm $ARC/common.asm $ARC/special.asm $ARC_THR/thread.asm $ARC_CALL/syscall.asm $ARC_SYNC/spinlock.asm $ARC_UTIL/math.asm $ARC_UTIL/misc.asm"
+ASM_FILES="$SRC/resources.asm $ARC/mb2.asm $ARC/boot.asm $ARC/long_init.asm $ARC/common.asm $ARC/special.asm $ARC_SCHED/thread.asm $ARC_CALL/syscall.asm $ARC_SYNC/spinlock.asm $ARC_UTIL/math.asm $ARC_UTIL/misc.asm"
 
 OUT_FILE=$BUILDDIR/iso/boot/kernel.bin
 
@@ -72,7 +72,7 @@ function comp_time {
 function c_build {
 	if comp_time $1
 	then
-		echo "Compiling $1..."
+		echo -e "\nCompiling $1..."
 	#probably bad idea to use large code model, but im to lazy to change pagind now
 		amd64-elf-g++ $1 -o $BUILDDIR/$1$EXT $G $O $COMP_FLAGS
 	else
@@ -83,7 +83,7 @@ function c_build {
 function asm_build {
 	if comp_time $1
 	then
-		echo "Assembling $1..."
+		echo -e "\nAssembling $1..."
 		nasm $1 -o $BUILDDIR/$1$EXT $G $ASM_FLAGS
 	else
 		return 0

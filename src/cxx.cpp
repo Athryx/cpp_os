@@ -17,3 +17,13 @@ void *operator new[] (usize n)
 {
 	return mem::kalloc (n);
 }
+
+void operator delete (void *mem, usize n)
+{
+	mem::kfree (mem, n);
+}
+
+void operator delete[] (void *mem, usize n)
+{
+	mem::kfree (mem, n);
+}

@@ -58,7 +58,7 @@ function comp_time {
 function c_build {
 	if comp_time $1
 	then
-		echo "Compiling $1..."
+		echo -e "\nCompiling $1..."
 	#probably bad idea to use large code model, but im to lazy to change pagind now
 		amd64-elf-g++ $1 -o $BUILDDIR/$1$EXT $G $O $COMP_FLAGS
 	else
@@ -69,7 +69,7 @@ function c_build {
 function asm_build {
 	if comp_time $1
 	then
-		echo "Assembling $1..."
+		echo -e "\nAssembling $1..."
 		nasm $1 -o $BUILDDIR/$1$EXT $G $ASM_FLAGS
 	else
 		return 0

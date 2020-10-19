@@ -8,9 +8,14 @@
 
 #define MAX_MEM_NODES 4
 
-// 256 gibibytes
-#define MAX_SUPPERTED_MEM (1 << 38)
-#define MAX_SUPPERTED_MEM_BITS 39
+// architecture max
+#define MAX_MEM ((usize) 1 << 48)
+#define MAX_MEM_BITS 48
+
+// 256 gibibytes, because of virtual address mapping
+#define MAX_SUPPORTED_MEM ((usize) 1 << 39)
+#define MAX_SUPPORTED_MEM_BITS 39
+
 // 4 KiB
 #define PAGE_SIZE ((usize) 4096)
 #define PAGE_BITS 12

@@ -31,8 +31,7 @@ void *mem::addr_space::alloc (usize n)
 	{
 		if (alloc_size < PAGE_SIZE)
 		{
-			allocation->~virt_allocation ();
-			kfree (allocation, sizeof (struct virt_allocation));
+			delete allocation;
 			return NULL;
 		}
 
@@ -54,8 +53,7 @@ void *mem::addr_space::alloc (usize n)
 	if (!out)
 	{
 		virt_allocs.remove_p (allocation);
-		allocation->~virt_allocation ();
-		kfree (allocation, sizeof (struct virt_allocation));
+		delete allocation;
 		return NULL;
 	}
 
@@ -102,8 +100,7 @@ void mem::addr_space::free (void *mem)
 			}
 
 			virt_allocs.remove (i);
-			allocation->~virt_allocation ();
-			mem::kfree (allocation, sizeof (struct virt_allocation));
+			delete allocation;
 		}
 	}
 }

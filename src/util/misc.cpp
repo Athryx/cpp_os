@@ -1,5 +1,6 @@
 #include <util/misc.hpp>
 #include <types.hpp>
+#include <mem/mem_def.hpp>
 
 
 usize align_up (usize addr, usize align);
@@ -36,4 +37,13 @@ u64 get_bits_raw (u64 n, u8 l, u8 h)
 {
 	u64 temp = h == 63 ? 0xffffffffffffffff : (((u64) 1) << (h + 1)) - 1;
 	return ((temp & n) >> l) << l;
+}
+
+usize canonical_addr (usize addr)
+{
+	if (addr & ((usize) 1 << (MAX_MEM_BITS - 1)))
+	{
+		return addr | ~(MAX_MEM - 1);
+	}
+	return addr & (MAX_MEM - 1);
 }
