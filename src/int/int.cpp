@@ -2,46 +2,64 @@
 #include <types.hpp>
 #include <arch/x64/special.hpp>
 #include <util/misc.hpp>
+#include <sched/thread.hpp>
 
 
-#define make_int_handler(vec)				\
-__attribute__ ((interrupt))				\
-void int_handler_##vec (struct int_data	*data)		\
-{							\
-	for (u8 i = 0; i < MAX_HANDLERS; i ++)	\
-	{						\
-		if (int_handlers[vec][i] != NULL)	\
-		{					\
-			int_handlers[vec][i] (data, 0);	\
-		}					\
-	}						\
+#define make_int_handler(vec)					\
+__attribute__ ((interrupt))					\
+void int_handler_##vec (struct int_data	*data)			\
+{								\
+	for (u8 i = 0; i < MAX_HANDLERS; i ++)			\
+	{							\
+		if (int_handlers[vec][i] != NULL)		\
+		{						\
+			int_handlers[vec][i] (data, 0, NULL);	\
+		}						\
+	}							\
 }
 
 #define make_int_handler_e(vec)						\
 __attribute__ ((interrupt))						\
 void int_handler_##vec (struct int_data *data, error_code_t error)	\
 {									\
-	for (u8 i = 0; i < MAX_HANDLERS; i ++)			\
+	for (u8 i = 0; i < MAX_HANDLERS; i ++)				\
 	{								\
 		if (int_handlers[vec][i] != NULL)			\
 		{							\
-			int_handlers[vec][i] (data, error);		\
+			int_handlers[vec][i] (data, error, NULL);	\
 		}							\
 	}								\
 }
 
-#define make_irq_handler(vec)				\
-__attribute__ ((interrupt))				\
-void int_handler_##vec (struct int_data	*data)		\
-{							\
-	for (u8 i = 0; i < MAX_HANDLERS; i ++)	\
-	{						\
-		if (int_handlers[vec][i] != NULL)	\
-		{					\
-			int_handlers[vec][i] (data, 0);	\
-		}					\
-	}						\
-	pic_eoi (vec);					\
+#define make_irq_handler(vec)					\
+__attribute__ ((interrupt))					\
+void int_handler_##vec (struct int_data	*data)			\
+{								\
+	for (u8 i = 0; i < MAX_HANDLERS; i ++)			\
+	{							\
+		if (int_handlers[vec][i] != NULL)		\
+		{						\
+			int_handlers[vec][i] (data, 0, NULL);	\
+		}						\
+	}							\
+	pic_eoi (vec);						\
+}
+
+#define make_c_int_handler(vec)							\
+sched::register *c_int_handler_##vec (sched::register *regs, struct int_data *data, error_code_t error)	\
+{										\
+	sched::register *out = NULL;						\
+	for (u8 i = 0; i < MAX_HANDLERS; i ++)					\
+	{									\
+		if (int_handlers[vec][i] != NULL)				\
+		{								\
+			if (i == 0)						\
+				out = int_handlers[vec][0] (data, error, regs);	\
+			else							\
+				int_handlers[vec][i] (data, error, regs);	\
+		}								\
+	}									\
+	return out;								\
 }
 
 // return to next instruction
@@ -49,12 +67,12 @@ void int_handler_##vec (struct int_data	*data)		\
 idt_add_entry (vec, (void *) int_handler_##vec, 0b10001110)	\
 
 // return to current instruction
-#define reg_b_handler_e(vec)					\
+#define reg_b_handler_trap(vec)					\
 idt_add_entry (vec, (void *) int_handler_##vec, 0b10001111)	\
 
 
 static struct idt_e idt[256];
-static int_handler_t int_handlers[256][MAX_HANDLERS];
+int_handler_t int_handlers[256][MAX_HANDLERS];
 
 
 void idt_init (void);
@@ -128,16 +146,16 @@ void idt_init (void)
 	reg_b_handler(5);
 	reg_b_handler(6);
 	reg_b_handler(7);
-	reg_b_handler_e(8);
+	reg_b_handler(8);
 	reg_b_handler(9);
-	reg_b_handler_e(10);
-	reg_b_handler_e(11);
-	reg_b_handler_e(12);
-	reg_b_handler_e(13);
-	reg_b_handler_e(14);
+	reg_b_handler(10);
+	reg_b_handler(11);
+	reg_b_handler(12);
+	reg_b_handler(13);
+	reg_b_handler(14);
 	reg_b_handler(15);
 	reg_b_handler(16);
-	reg_b_handler_e(17);
+	reg_b_handler_trap(17);
 	reg_b_handler(18);
 	reg_b_handler(19);
 	reg_b_handler(20);
@@ -150,7 +168,7 @@ void idt_init (void)
 	reg_b_handler(27);
 	reg_b_handler(28);
 	reg_b_handler(29);
-	reg_b_handler_e(30);
+	reg_b_handler(30);
 	reg_b_handler(31);
 	reg_b_handler(32);
 	reg_b_handler(33);

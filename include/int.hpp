@@ -2,6 +2,7 @@
 
 
 #include <types.hpp>
+#include <sched/thread.hpp>
 
 
 #define MAX_HANDLERS 16
@@ -90,7 +91,7 @@ struct int_data
 typedef u64 error_code_t;
 #endif
 
-typedef void (*int_handler_t) (struct int_data *, error_code_t);
+typedef void (*int_handler_t) (struct int_data *, error_code_t, sched::registers *);
 
 
 // load the idt

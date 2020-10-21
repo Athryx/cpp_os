@@ -26,10 +26,11 @@ ARC_SCHED=$ARC/sched
 ARC_CALL=$ARC/syscall
 ARC_SYNC=$ARC/sync
 ARC_UTIL=$ARC/util
+ARC_INT=$ARC/int
 
 C_FILES="$SRC/main.cpp $SRC/init.cpp $SRC/cxx.cpp $SRC/global.cpp $SRC/mb2.cpp $SRC/gdt.cpp $DR/vga_tty.cpp $DR/ps2.cpp $UTIL/io.cpp $UTIL/string.cpp $UTIL/math.cpp $UTIL/misc.cpp $UTIL/linked_list.cpp $TME/pit.cpp $SYNC/spinlock.cpp $MEM/mem.cpp $MEM/pmem.cpp $MEM/vmem.cpp $MEM/kmem.cpp $MEM/slab.cpp $SCHED/process.cpp $SCHED/thread.cpp $INT/pic.cpp $INT/int.cpp $CALL/syscall.cpp $ARC/common.cpp"
 
-ASM_FILES="$SRC/resources.asm $ARC/mb2.asm $ARC/boot.asm $ARC/long_init.asm $ARC/common.asm $ARC/special.asm $ARC_SCHED/thread.asm $ARC_CALL/syscall.asm $ARC_SYNC/spinlock.asm $ARC_UTIL/math.asm $ARC_UTIL/misc.asm"
+ASM_FILES="$SRC/resources.asm $ARC/mb2.asm $ARC/boot.asm $ARC/long_init.asm $ARC/common.asm $ARC/special.asm $ARC_SCHED/thread.asm $ARC_CALL/syscall.asm $ARC_SYNC/spinlock.asm $ARC_UTIL/math.asm $ARC_INT/int.asm"
 
 OUT_FILE=$BUILDDIR/iso/boot/kernel.bin
 
@@ -40,7 +41,7 @@ EXT=".o"
 [[ $1 = debug ]] && G_DEF="-D debug" G=-g && O=-O0 && EXT=".g.o"
 
 COMP_FLAGS="-c -I$INCL/ -ffreestanding -fno-rtti -fno-exceptions -Wall -Wextra -mno-red-zone -mgeneral-regs-only -mcmodel=large -D $ARCH $G_DEF"
-ASM_FLAGS="-f elf64 -F dwarf"
+ASM_FLAGS="-I$INCL/arch/$ARCH/ -f elf64 -F dwarf"
 LINK_FLAGS="-ffreestanding -nostdlib -lgcc -mcmodel=large -n -T $LD_SCRIPT"
 
 for C_FILE in $C_FILES

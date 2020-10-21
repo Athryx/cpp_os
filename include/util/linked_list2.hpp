@@ -59,7 +59,7 @@ namespace util
 					return NULL;
 
 				T *out = node->item;
-				mem::kfree (node, sizeof (list_node2));
+				delete node;
 				return out;
 			}
 
@@ -70,7 +70,7 @@ namespace util
 					return NULL;
 
 				T *out = node->item;
-				mem::kfree (node, sizeof (list_node2));
+				delete node;
 				return out;
 			}
 
@@ -81,7 +81,7 @@ namespace util
 					return NULL;
 
 				T *out = node->item;
-				mem::kfree (node, sizeof (list_node2));
+				delete node;
 				return out;
 			}
 

@@ -20,4 +20,7 @@ namespace sched
 
 			util::linked_list2<thread> threads;
 	};
+
+
+	extern process proc_c;
 }
