@@ -10,6 +10,7 @@
 #include <syscall.hpp>
 #include <mem/mem.hpp>
 #include <mem/kmem.hpp>
+#include <sched/thread.hpp>
 
 
 static void double_fault (struct int_data* data, error_code_t error_code);
@@ -17,22 +18,25 @@ static void kbd_p (struct int_data* data, error_code_t error_code);
 u8 init (void *mb2_table);
 
 
-static void double_fault (struct int_data* data, error_code_t error_code)
+static sched::registers *double_fault (struct int_data* data, error_code_t error_code, sched::registers *regs)
 {
 	kprintf ("double fault\n");
+	return NULL;
 }
 
-static void page_fault (struct int_data* data, error_code_t error_code)
+static sched::registers *page_fault (struct int_data* data, error_code_t error_code, sched::registers *regs)
 {
 	kprintf ("page fault\n");
+	return NULL;
 }
 
-static void kbd_p (struct int_data* data, error_code_t error_code)
+static sched::registers *kbd_p (struct int_data* data, error_code_t error_code, sched::registers *regs)
 {
 	char s[32];
 	memset (s, 32, 0);
 	if (kbd_read (s, 32))
 		kprintf ("%s", s);
+	return NULL;
 }
 
 u8 init (void *mb2_table)

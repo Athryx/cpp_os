@@ -91,7 +91,7 @@ struct int_data
 typedef u64 error_code_t;
 #endif
 
-typedef void (*int_handler_t) (struct int_data *, error_code_t, sched::registers *);
+typedef sched::registers *(*int_handler_t) (struct int_data *, error_code_t, sched::registers *);
 
 
 // load the idt
@@ -105,4 +105,4 @@ void rem_int_handler (u8 vec, int_handler_t handler);
 void pic_remap (u8 m_offset, u8 s_offset);
 
 // tell pics to start sending irqs again
-void pic_eoi (u8 irq);
+extern "C" void pic_eoi (u8 irq);

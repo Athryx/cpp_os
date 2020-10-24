@@ -22,5 +22,5 @@ namespace sched
 	};
 
 
-	extern process proc_c;
+	extern sched::process proc_c;
 }

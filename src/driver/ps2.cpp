@@ -4,6 +4,7 @@
 #include <arch/x64/common.hpp>
 #include <util/io.hpp>
 #include <util/math.hpp>
+#include <sched/thread.hpp>
 // this is supposed to be a bad driver, it is temporry since drivers will be in userland if I am still working on this by then
 
 
@@ -32,7 +33,7 @@ static u8 update_kbd_status (u8 c);
 static char scan_toc (u8 scan);
 
 
-static void ps2_int_handler (struct int_data *data, error_code_t error)
+static sched::registers *ps2_int_handler (struct int_data *data, error_code_t error, sched::registers *regs)
 {
 	u8 code = inb (PS2_DATA);
 	scancode_buf[scan_i] = code;
@@ -43,6 +44,7 @@ static void ps2_int_handler (struct int_data *data, error_code_t error)
 	scan_i ++;
 	scan_i = wrap (scan_i, 0, SCAN_BUF_SIZE - 1);
 	read_i = wrap (read_i, 0, SCAN_BUF_SIZE - 1);
+	return NULL;
 }
 
 u8 kbd_init (void)

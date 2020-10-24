@@ -46,9 +46,10 @@ void int_handler_##vec (struct int_data	*data)			\
 }
 
 #define make_c_int_handler(vec)							\
-sched::register *c_int_handler_##vec (sched::register *regs, struct int_data *data, error_code_t error)	\
+extern "C" void int_handler_##vec (void); /* for reg_b_handler */			\
+extern "C" sched::registers *c_int_handler_##vec (sched::registers *regs, struct int_data *data, error_code_t error)	\
 {										\
-	sched::register *out = NULL;						\
+	sched::registers *out = NULL;						\
 	for (u8 i = 0; i < MAX_HANDLERS; i ++)					\
 	{									\
 		if (int_handlers[vec][i] != NULL)				\
@@ -113,7 +114,7 @@ make_int_handler(28)
 make_int_handler(29)
 make_int_handler_e(30)
 make_int_handler(31)
-make_irq_handler(32)
+make_c_int_handler(32)
 make_irq_handler(33)
 make_irq_handler(34)
 make_irq_handler(35)

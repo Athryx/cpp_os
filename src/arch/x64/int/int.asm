@@ -4,7 +4,8 @@ extern pic_eoi
 
 %macro make_asm_int_handler 1
 extern c_int_handler_ %+ %1
-asm_int_handler %+ %1:
+global int_handler_ %+ %1
+int_handler_ %+ %1:
 	; make register structure for c function
 	; rsp, rflags, and rip are set on interrupt stack frame
 	sub rsp, registers_size
@@ -84,7 +85,8 @@ asm_int_handler %+ %1:
 
 %macro make_asm_int_handler_e 1
 extern c_int_handler_ %+ %1
-asm_int_handler %+ %1:
+global int_handler_ %+ %1
+int_handler_ %+ %1:
 	; make register structure for c function
 	; rsp, rflags, and rip are set on interrupt stack frame
 	sub rsp, registers_size
@@ -170,7 +172,8 @@ asm_int_handler %+ %1:
 
 %macro make_asm_irq_handler 1
 extern c_int_handler_ %+ %1
-asm_int_handler %+ %1:
+global int_handler_ %+ %1
+int_handler_ %+ %1:
 	; make register structure for c function
 	; rsp, rflags, and rip are set on interrupt stack frame
 	sub rsp, registers_size
@@ -200,13 +203,15 @@ asm_int_handler %+ %1:
 	mov rdx, 0
 	mov rax, c_int_handler_ %+ %1
 	call rax
+	; save return value because pic_eoi overwrites it
+	mov r14, rax
 
 	; send pic eoi
 	mov rdi, %1
 	mov rcx, pic_eoi
 	call rcx
 
-	cmp rax, 0
+	cmp r14, 0
 	je .restore
 
 	; set registers according to output
@@ -255,3 +260,4 @@ asm_int_handler %+ %1:
 
 section .text
 bits 64
+make_asm_irq_handler IRQ_TIMER

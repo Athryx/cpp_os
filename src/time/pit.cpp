@@ -4,6 +4,7 @@
 #include <arch/x64/common.hpp>
 #include <util/misc.hpp>
 #include <util/io.hpp>
+#include <sched/thread.hpp>
 
 
 #define PIT_INTERRUPT_TERMINAL_COUNT 0
@@ -41,9 +42,10 @@ u64 time_nsec_nolatch (void);
 u64 time_sec_nolatch (void);
 
 
-static void timer_irq_handler (struct int_data *data, error_code_t error_code)
+static sched::registers *timer_irq_handler (struct int_data *data, error_code_t error_code, sched::registers *regs)
 {
 	pit_data.elapsed_time += pit_data.nano_reset;
+	return NULL;
 }
 
 void time_init (void)

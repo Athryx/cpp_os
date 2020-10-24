@@ -26,7 +26,7 @@
 
 
 void pic_remap (u8 m_offset, u8 s_offset);
-void pic_eoi (u8 irq);
+extern "C" void pic_eoi (u8 irq);
 
 
 // from osdev wiki
@@ -67,7 +67,7 @@ void pic_remap (u8 m_offset, u8 s_offset)
 }
 
 // tell pics irq is over
-void pic_eoi (u8 irq)
+extern "C" void pic_eoi (u8 irq)
 {
 	if (irq - PICM_OFFSET > 7)
 		outb (PICS_COMMAND, PIC_EOI);
