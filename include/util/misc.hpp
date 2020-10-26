@@ -4,6 +4,9 @@
 #include <types.hpp>
 
 
+#define void_inc(ptr, n) ((ptr) = ((void *) ((u8 *) (ptr) + n)))
+
+
 usize align_up (usize addr, usize align);
 usize align_down (usize addr, usize align);
 usize align_of (usize addr);

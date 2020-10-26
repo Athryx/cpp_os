@@ -7,6 +7,11 @@
 //sched::thread thread_c (sched::proc_c);
 
 
+sched::thread::thread (process &proc, thread_func_t func)
+: proc (proc)
+{
+}
+
 sched::thread::thread (process &proc)
 : proc (proc)
 {

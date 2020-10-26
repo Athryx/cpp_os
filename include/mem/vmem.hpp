@@ -48,9 +48,10 @@ namespace mem
 	{
 		public:
 			addr_space ();
-			// incomplete
+			// TODO: finish
 			~addr_space ();
 
+			// TODO: support setting read, write, and execute permissions on pages
 			// allocates virtual memory zone and any underlying physical memory
 			// allocates at least n bytes
 			// returns null on failure
@@ -60,7 +61,7 @@ namespace mem
 			// returns pointer to new virtual memory zone on success
 			// returns null on failure, and does not free any mamory pointed to by mem
 			// allocates and frees underlying physical memory as needed
-			// unfinished
+			// TODO: finish
 			void *realloc (void *mem, usize n);
 			// frees virtual address mem and any underlying pysical memory
 			void free (void *mem);
@@ -73,7 +74,6 @@ namespace mem
 			bool map_at (usize phys_addr, usize virt_addr, usize n);
 			// unmaps memory prevously mapped by map
 			void *unmap (usize virt_addr);
-
 
 		private:
 			void *map_alloc_data (struct virt_allocation *allocation);

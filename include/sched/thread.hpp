@@ -7,6 +7,8 @@
 
 namespace sched
 {
+	typedef void (*thread_func_t) ();
+
 	class process;
 
 	struct registers
@@ -34,6 +36,7 @@ namespace sched
 	class thread : public util::list_node
 	{
 		public:
+			thread (process &proc, thread_func_t func);
 			thread (process &proc);
 
 			void switch_to ();

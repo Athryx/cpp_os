@@ -1,7 +1,11 @@
-global initfs
-global initfs_len
+; first argument is name, second argument is path
+%macro incres 2
+global %1
+global %1 %+ _len
+%1:
+	incbin %2
+%1 %+ _len	equ	$ - %1
+%endmacro
 
 section .rodata
-initfs:
-	incbin "initfs/initfs.bin"
-initfs_len	equ	$-initfs
+incres initfs, "initfs/initfs.bin"

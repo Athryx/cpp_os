@@ -22,6 +22,14 @@ namespace util
 		public:
 			linked_list2 () {}
 
+			~linked_list2 ()
+			{
+				while (list.get_len ())
+				{
+					pop ();
+				}
+			}
+
 			bool prepend (T *item)
 			{
 				list_node2 *node = new list_node2 ();
@@ -97,7 +105,7 @@ namespace util
 				return node->item;
 			}
 
-			inline usize get_len () { list.get_len (); }
+			inline usize get_len () { return list.get_len (); }
 
 		private:
 			linked_list list;
