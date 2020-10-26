@@ -10,6 +10,7 @@
 #include <util/time.hpp>
 #include <arch/x64/special.hpp>
 #include <mem/mem.hpp>
+#include <sched/thread.hpp>
 
 
 using namespace mem;
@@ -125,7 +126,7 @@ void main_thread (void)
 
 	// will fail
 	process_new (userspace_thread, NULL);*/
-	kprintf ("didn't crash");
+	kprintf ("didn't crash\n");
 }
 
 extern "C" [[ noreturn ]] void _start (void *mb2_table)
@@ -138,7 +139,7 @@ extern "C" [[ noreturn ]] void _start (void *mb2_table)
 		panic ("init failed");
 	}
 
-	main_thread ();
+	//main_thread ();
 	// test
 	//kthread_new (thread_2);
 	//addr_space_t *addr_space = addr_space_new (0b111, 0b111);

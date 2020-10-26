@@ -16,28 +16,39 @@ namespace mem
 		usize len;
 	};
 
+	enum alloc_type
+	{
+		valloc,
+		map
+	};
+
 	struct virt_zone : public util::list_node
 	{
 		usize virt_addr;
 		usize len;
+
+		alloc_type type;
+
+		util::array_list<phys_allocation> allocations;
+		usize phys_addr;
 	};
 
 	struct virt_allocation : public virt_zone
 	{
+		virt_allocation () { type = alloc_type::valloc; }
 		~virt_allocation ();
-
-		util::array_list<struct phys_allocation> allocations;
 	};
 
 	struct phys_map : public virt_zone
 	{
-		usize phys_addr;
+		phys_map () { type = alloc_type::map; }
 	};
 
 	class addr_space
 	{
 		public:
 			addr_space ();
+			// incomplete
 			~addr_space ();
 
 			// allocates virtual memory zone and any underlying physical memory
@@ -58,8 +69,11 @@ namespace mem
 			// can be multiple virt address mapped to same phys address
 			// addr is a linear kernel space address
 			void *map (usize phys_addr, usize n);
+			// map_at does the same as map, but try to map at specific virtual address, and they return false if it is already taken
+			bool map_at (usize phys_addr, usize virt_addr, usize n);
 			// unmaps memory prevously mapped by map
 			void *unmap (usize virt_addr);
+
 
 		private:
 			void *map_alloc_data (struct virt_allocation *allocation);
@@ -75,9 +89,14 @@ namespace mem
 			// returns true when page table it was examaning needss to be freed
 			bool unmap_internal_recurse (usize &virt_addr, usize &page_n, usize page_level, usize *page_table);
 
+			usize find_address (util::linked_list &list, struct virt_zone &allocation);
+			usize get_free_space (usize virt_addr);
+
+			#ifdef x64
+			usize page_set (usize *page_table, u16 i, usize n);
+
 			// adds n to page counter c
 			// page counter is stored in ignored bits of first entry in every page table data structure
-			#ifdef x64
 			inline usize page_counter_add (usize &c, i16 n)
 			{
 				usize temp = ((get_bits (c, 52, 58) << 3) | get_bits (c, 9, 11)) + n;
@@ -91,47 +110,10 @@ namespace mem
 			{
 				return (get_bits (c, 52, 58) << 3) | get_bits (c, 9, 11);
 			}
-
-			// returns address to page it was set to
-			inline usize page_set (usize *page_table, u16 i, usize n)
-			{
-				if (n == 0)
-				{
-					if (i == 0)
-					{
-						// have to do something special because of page counter in index 0
-						usize c_value = page_table[i] & ~PAGE_DATA_POS;
-						n = n & PAGE_DATA_POS;
-						page_table[i] = (n | c_value) & ~PAGE_PRESENT;
-					}
-					else
-					{
-						page_table[i] = n & ~PAGE_PRESENT;
-					}
-					return 0;
-				}
-				else
-				{
-					if (i == 0)
-					{
-						// have to do something special because of page counter in index 0
-						usize c_value = page_table[i] & ~PAGE_DATA_POS;
-						n = n & PAGE_DATA_POS;
-						page_table[i] = n | c_value | PAGE_PRESENT;
-					}
-					else
-					{
-						page_table[i] = n | PAGE_PRESENT;
-					}
-				}
-				return canonical_addr (n & PAGE_ADDR_POS);
-			}
 			#endif
 
-			usize find_address (util::linked_list &list, struct virt_zone &allocation);
 
 			usize pml4_table;
 			util::linked_list virt_allocs;
-			util::linked_list phys_maps;
 	};
 }

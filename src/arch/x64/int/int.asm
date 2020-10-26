@@ -31,8 +31,8 @@ int_handler_ %+ %1:
 
 	; call c function
 	mov rdi, r15
-	mov rsi, rsp
-	mov rdx, 0
+	mov rsi, 0
+	mov rdx, rsp
 	mov rax, c_int_handler_ %+ %1
 	call rax
 
@@ -40,12 +40,12 @@ int_handler_ %+ %1:
 	je .restore
 
 	; set registers according to output
-	mov rcx, [rax + registers.rsp]
-	mov [r15 + int_data.rsp], rcx
-	mov rcx, [rax + registers.rip]
-	mov [r15 + int_data.rip], rcx
-	mov rcx, [rax + registers.rflags]
-	mov [r15 + int_data.rflags], rcx
+	;mov rcx, [rax + registers.rsp]
+	;mov [r15 + int_data.rsp], rcx
+	;mov rcx, [rax + registers.rip]
+	;mov [r15 + int_data.rip], rcx
+	;mov rcx, [rax + registers.rflags]
+	;mov [r15 + int_data.rflags], rcx
 
 	mov rbx, [rax + registers.rbx]
 	mov rcx, [rax + registers.rcx]
@@ -111,12 +111,12 @@ int_handler_ %+ %1:
 	add r15, registers_size
 
 	; get error code
-	mov rdx, [r15]
+	mov rsi, [r15]
 	add r15, 8
 
 	; call c function
 	mov rdi, r15
-	mov rsi, rsp
+	mov rdx, rsp
 	mov rax, c_int_handler_ %+ %1
 	call rax
 
@@ -124,12 +124,12 @@ int_handler_ %+ %1:
 	je .restore
 
 	; set registers according to output
-	mov rcx, [rax + registers.rsp]
-	mov [r15 + int_data.rsp], rcx
-	mov rcx, [rax + registers.rip]
-	mov [r15 + int_data.rip], rcx
-	mov rcx, [rax + registers.rflags]
-	mov [r15 + int_data.rflags], rcx
+	;mov rcx, [rax + registers.rsp]
+	;mov [r15 + int_data.rsp], rcx
+	;mov rcx, [rax + registers.rip]
+	;mov [r15 + int_data.rip], rcx
+	;mov rcx, [rax + registers.rflags]
+	;mov [r15 + int_data.rflags], rcx
 
 	mov rbx, [rax + registers.rbx]
 	mov rcx, [rax + registers.rcx]
@@ -199,8 +199,8 @@ int_handler_ %+ %1:
 
 	; call c function
 	mov rdi, r15
-	mov rsi, rsp
-	mov rdx, 0
+	mov rsi, 0
+	mov rdx, rsp
 	mov rax, c_int_handler_ %+ %1
 	call rax
 	; save return value because pic_eoi overwrites it
@@ -215,28 +215,28 @@ int_handler_ %+ %1:
 	je .restore
 
 	; set registers according to output
-	mov rcx, [rax + registers.rsp]
-	mov [r15 + int_data.rsp], rcx
-	mov rcx, [rax + registers.rip]
-	mov [r15 + int_data.rip], rcx
-	mov rcx, [rax + registers.rflags]
-	mov [r15 + int_data.rflags], rcx
+	;mov rcx, [r14 + registers.rsp]
+	;mov [r15 + int_data.rsp], rcx
+	;mov rcx, [r14 + registers.rip]
+	;mov [r15 + int_data.rip], rcx
+	;mov rcx, [r14 + registers.rflags]
+	;mov [r15 + int_data.rflags], rcx
 
-	mov rbx, [rax + registers.rbx]
-	mov rcx, [rax + registers.rcx]
-	mov rdx, [rax + registers.rdx]
-	mov rbp, [rax + registers.rbp]
-	mov rdi, [rax + registers.rdi]
-	mov rsi, [rax + registers.rsi]
-	mov r8, [rax + registers.r8]
-	mov r9, [rax + registers.r9]
-	mov r10, [rax + registers.r10]
-	mov r11, [rax + registers.r11]
-	mov r12, [rax + registers.r12]
-	mov r13, [rax + registers.r13]
-	mov r14, [rax + registers.r14]
-	mov r15, [rax + registers.r15]
-	mov rax, [rax + registers.rax]
+	mov rax, [r14 + registers.rax]
+	mov rbx, [r14 + registers.rbx]
+	mov rcx, [r14 + registers.rcx]
+	mov rdx, [r14 + registers.rdx]
+	mov rbp, [r14 + registers.rbp]
+	mov rdi, [r14 + registers.rdi]
+	mov rsi, [r14 + registers.rsi]
+	mov r8, [r14 + registers.r8]
+	mov r9, [r14 + registers.r9]
+	mov r10, [r14 + registers.r10]
+	mov r11, [r14 + registers.r11]
+	mov r12, [r14 + registers.r12]
+	mov r13, [r14 + registers.r13]
+	mov r15, [r14 + registers.r15]
+	mov r14, [r14 + registers.r14]
 
 	add rsp, registers_size
 	iretq
@@ -252,6 +252,7 @@ int_handler_ %+ %1:
 	mov r9, [rsp + registers.r9]
 	mov r10, [rsp + registers.r10]
 	mov r11, [rsp + registers.r11]
+	mov r14, [rsp + registers.r14]
 	mov r15, [rsp + registers.r15]
 
 	add rsp, registers_size

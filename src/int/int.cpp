@@ -47,7 +47,7 @@ void int_handler_##vec (struct int_data	*data)			\
 
 #define make_c_int_handler(vec)							\
 extern "C" void int_handler_##vec (void); /* for reg_b_handler */			\
-extern "C" sched::registers *c_int_handler_##vec (sched::registers *regs, struct int_data *data, error_code_t error)	\
+extern "C" sched::registers *c_int_handler_##vec (struct int_data *data, error_code_t error, sched::registers *regs)	\
 {										\
 	sched::registers *out = NULL;						\
 	for (u8 i = 0; i < MAX_HANDLERS; i ++)					\
