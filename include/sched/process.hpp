@@ -14,17 +14,17 @@ namespace sched
 	{
 		public:
 			// FIXME: map kernel pages in
-			process ();
+			process (u8 uid);
 			// TODO: call thread_block to delete threads
 			~process ();
 
 			// TODO: add dynamic linking and read, write, and execute protect sections
-			static process *load_elf (void *program, usize len);
+			static process *load_elf (void *program, usize len, u8 uid);
 
 			inline u8 get_uid () { return uid; }
 
-		private:
 			mem::addr_space addr_space;
+		private:
 			util::linked_list2<thread> threads;
 
 			u8 uid;

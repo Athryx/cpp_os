@@ -88,6 +88,9 @@ namespace mem
 			// marks the zone as no longer reserved
 			void unreserve (usize virt_addr);
 
+			// translates a virtual address to a kernel addres which points to the start of the page
+			void *translate (usize virt_addr);
+
 		private:
 			void *map_alloc_data (struct virt_allocation *allocation);
 

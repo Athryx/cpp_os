@@ -36,6 +36,7 @@ namespace sched
 		u16 ds;
 	} __attribute__ ((packed));
 
+	// FIXME: fix make sure to switch virt addr
 	class thread : public util::list_node
 	{
 		private:

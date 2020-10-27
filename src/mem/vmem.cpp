@@ -285,6 +285,31 @@ void *mem::addr_space::map_alloc_data (struct virt_allocation *allocation)
 	return (void *) virt_addr;
 }
 
+void *mem::addr_space::translate (usize virt_addr)
+{
+	usize *pml4_t = (usize *) canonical_addr ((pml4_table & PAGE_ADDR_POS) + kernel_vma);
+	usize pml4_i = get_bits (virt_addr, 39, 47);
+	if (!(pml4_t[pml4_i] & PAGE_PRESENT))
+		return NULL;
+
+	usize *pdp_t = (usize *) canonical_addr ((pml4_t[pml4_i] & PAGE_ENTRIES) + kernel_vma);
+	usize pdp_i = get_bits (virt_addr, 30, 38);
+	if (!(pdp_t[pdp_i] & PAGE_PRESENT))
+		return NULL;
+
+	usize *pd_t = (usize *) canonical_addr ((pdp_t[pdp_i] & PAGE_ENTRIES) + kernel_vma);
+	usize pd_i = get_bits (virt_addr, 21, 29);
+	if (!(pd_t[pd_i] & PAGE_PRESENT))
+		return NULL;
+
+	usize *page_t = (usize *) canonical_addr ((pd_t[pd_i] & PAGE_ENTRIES) + kernel_vma);
+	usize page_i = get_bits (virt_addr, 12, 20);
+	if (!(page_t[page_i] & PAGE_PRESENT))
+		return NULL;
+
+	return (void *) canonical_addr ((page_t[page_i] & PAGE_ENTRIES) + kernel_vma);
+}
+
 bool mem::addr_space::map_internal (usize phys_addr, usize virt_addr, usize n)
 {
 	n = align_up (n, PAGE_SIZE) / PAGE_SIZE;

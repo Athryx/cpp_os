@@ -13,3 +13,8 @@
 #define T_READY 1
 #define T_DESTROY 2
 #define T_SLEEP 3
+
+// kernel uid
+#define KUID 0
+// superuser uid
+#define SUID 1

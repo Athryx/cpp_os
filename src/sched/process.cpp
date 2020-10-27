@@ -10,7 +10,8 @@
 sched::process *proc_c = NULL;
 
 
-sched::process::process ()
+sched::process::process (u8 uid)
+: uid (uid)
 {
 }
 
@@ -22,7 +23,7 @@ sched::process::~process ()
 	}
 }
 
-sched::process *sched::process::load_elf (void *program, usize len)
+sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 {
 	elf::header *hdr = (elf::header *) program;
 	usize prgrm = (usize) program;
@@ -43,7 +44,7 @@ sched::process *sched::process::load_elf (void *program, usize len)
 		return NULL;
 	}
 
-	process *out = new process;
+	process *out = new process (uid);
 
 	elf::p_header *p_hdrs = (elf::p_header *) (prgrm + hdr->p_hdr);
 

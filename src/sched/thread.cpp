@@ -149,12 +149,27 @@ sched::registers *sched::schedule ()
 
 
 sched::thread::thread (process &proc, thread_func_t func)
-: proc (proc)
+: proc (proc),
+stack_size (STACK_INITIAL_SIZE)
 {
+	stack_start = (usize) proc.addr_space.alloc (stack_size);
+
+	if (proc.get_uid () == 0)
+		regs = kernel_regs;
+	else if (proc.get_uid () == 1)
+		regs = superuser_regs;
+	else
+		regs = user_regs;
+
+	regs.rsp = stack_start + stack_size - 1;
+	regs.rip = (usize) func;
+
+	t_list[T_READY].append (this);
 }
 
 sched::thread::~thread ()
 {
+	proc.addr_space.free ((void *) stack_start);
 }
 
 void sched::thread::block (u8 state)
