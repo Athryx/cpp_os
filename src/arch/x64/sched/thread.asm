@@ -1,12 +1,12 @@
 %include "asm_def.asm"
 
-global thread_switch_asm
+global int_sched
 global thread_userspace
 
 section .text
 bits 64
-thread_switch_asm:
-
+int_sched:
+	int INT_SCHED
 	ret
 thread_userspace:
 	mov ax, 0x1b	; userspace data segment and rpl 3

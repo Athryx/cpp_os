@@ -60,6 +60,8 @@
 #define IRQ_PRIMARY_ATA (PICS_OFFSET + 6)
 #define IRQ_SECONDARY_ATA (PICS_OFFSET + 7)
 
+#define INT_SCHED 128
+
 
 struct idt_e
 {

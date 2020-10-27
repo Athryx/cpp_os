@@ -130,6 +130,7 @@ make_irq_handler(44)
 make_irq_handler(45)
 make_irq_handler(46)
 make_irq_handler(47)
+make_c_int_handler(128) 
 
 
 // have to do it like this since no memory allocation yet
@@ -187,6 +188,7 @@ void idt_init (void)
 	reg_b_handler(45);
 	reg_b_handler(46);
 	reg_b_handler(47);
+	reg_b_handler(128);
 }
 
 static void idt_add_entry (u8 vec, void *func, u8 attr)

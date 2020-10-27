@@ -7,7 +7,7 @@
 #include <mem/mem.hpp>
 
 
-sched::process proc_c;
+sched::process *proc_c = NULL;
 
 
 sched::process::process ()

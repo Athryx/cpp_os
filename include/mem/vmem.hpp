@@ -50,6 +50,7 @@ namespace mem
 		phys_reserve () { type = alloc_type::reserve; }
 	};
 
+	// TODO: adde structured allocation function
 	class addr_space
 	{
 		public:
@@ -77,14 +78,13 @@ namespace mem
 			// addr is a linear kernel space address
 			void *map (usize phys_addr, usize n);
 			// map_at does the same as map, but try to map at specific virtual address, and they return false if it is already taken
-			// TODO: put in alloc list
 			bool map_at (usize phys_addr, usize virt_addr, usize n);
 			// unmaps memory prevously mapped by map
 			void *unmap (usize virt_addr);
 
 			// marks virt_addr zone reserved, so alloc and map will not pick this address
-			// TODO: put in alloc list
-			bool reserve (usize virt_addr, usize n);
+			void *reserve (usize n);
+			bool reserve_at (usize virt_addr, usize n);
 			// marks the zone as no longer reserved
 			void unreserve (usize virt_addr);
 

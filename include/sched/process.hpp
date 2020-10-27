@@ -13,6 +13,7 @@ namespace sched
 	class process : public util::list_node
 	{
 		public:
+			// FIXME: map kernel pages in
 			process ();
 			// TODO: call thread_block to delete threads
 			~process ();
@@ -20,13 +21,17 @@ namespace sched
 			// TODO: add dynamic linking and read, write, and execute protect sections
 			static process *load_elf (void *program, usize len);
 
+			inline u8 get_uid () { return uid; }
+
 		private:
 			mem::addr_space addr_space;
 			util::linked_list2<thread> threads;
+
+			u8 uid;
 	};
 
 
-	extern sched::process proc_c;
+	extern sched::process *proc_c;
 }
 
 namespace elf

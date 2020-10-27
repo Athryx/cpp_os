@@ -117,6 +117,7 @@ void *mem::addr_space::map (usize phys_addr, usize n)
 
 	if (!virt_addr)
 	{
+		// don't need to remove from list
 		mem::kfree (zone, sizeof (struct phys_map));
 		return NULL;
 	}
@@ -135,8 +136,9 @@ void *mem::addr_space::map (usize phys_addr, usize n)
 
 bool mem::addr_space::map_at (usize phys_addr, usize virt_addr, usize n)
 {
-	if (get_free_space (virt_addr) < n)
-		return false;
+	// shouldn't be needed
+	//if (get_free_space (virt_addr) < n)
+	//	return false;
 
 	phys_map *zone = new phys_map;
 
@@ -184,10 +186,31 @@ void *mem::addr_space::unmap (usize virt_addr)
 	return NULL;
 }
 
-bool mem::addr_space::reserve (usize virt_addr, usize n)
+void *mem::addr_space::reserve (usize n)
 {
-	if (get_free_space (virt_addr) < n)
-		return false;
+	struct phys_reserve *zone = new struct phys_reserve;
+
+	if (!zone)
+		return NULL;
+
+	zone->len = n;
+	usize virt_addr = find_address (virt_allocs, *zone);
+
+	if (!virt_addr)
+	{
+		// don't need to remove from list
+		delete zone;
+		return NULL;
+	}
+
+	return (void *) virt_addr;
+}
+
+bool mem::addr_space::reserve_at (usize virt_addr, usize n)
+{
+	// shouldn't be needed
+	//if (get_free_space (virt_addr) < n)
+	//	return false;
 
 	phys_reserve *zone = new phys_reserve;
 

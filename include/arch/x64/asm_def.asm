@@ -55,6 +55,8 @@
 %define IRQ_PRIMARY_ATA (PICS_OFFSET + 6)
 %define IRQ_SECONDARY_ATA (PICS_OFFSET + 7)
 
+%define INT_SCHED 128
+
 
 struc registers
 	.rax resq 1
@@ -75,6 +77,8 @@ struc registers
 	.r15 resq 1
 	.rflags resq 1
 	.rip resq 1
+	.cs resw 1
+	.ds resw 1
 endstruc
 
 struc int_data

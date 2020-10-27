@@ -5,7 +5,7 @@ extern pic_eoi
 %macro make_asm_int_handler 1
 extern c_int_handler_ %+ %1
 global int_handler_ %+ %1
-int_handler_ %+ %1:
+int_handler_ %+ %1 %+ :
 	; make register structure for c function
 	; rsp, rflags, and rip are set on interrupt stack frame
 	sub rsp, registers_size
@@ -86,7 +86,7 @@ int_handler_ %+ %1:
 %macro make_asm_int_handler_e 1
 extern c_int_handler_ %+ %1
 global int_handler_ %+ %1
-int_handler_ %+ %1:
+int_handler_ %+ %1 %+ :
 	; make register structure for c function
 	; rsp, rflags, and rip are set on interrupt stack frame
 	sub rsp, registers_size
@@ -173,7 +173,7 @@ int_handler_ %+ %1:
 %macro make_asm_irq_handler 1
 extern c_int_handler_ %+ %1
 global int_handler_ %+ %1
-int_handler_ %+ %1:
+int_handler_ %+ %1 %+ :
 	; make register structure for c function
 	; rsp, rflags, and rip are set on interrupt stack frame
 	sub rsp, registers_size
@@ -262,3 +262,4 @@ int_handler_ %+ %1:
 section .text
 bits 64
 make_asm_irq_handler IRQ_TIMER
+make_asm_int_handler INT_SCHED
