@@ -52,7 +52,7 @@ void time_init (void)
 {
 	// maximum time between
 	set_pit_reset (0xffff);
-	if (!reg_int_handler (IRQ_TIMER, timer_irq_handler, false))
+	if (!reg_int_handler (IRQ_TIMER, timer_irq_handler, int_handler_type::first))
 	{
 		panic ("couldn't register pit irq handler");
 	}

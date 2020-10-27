@@ -95,11 +95,18 @@ typedef u64 error_code_t;
 
 typedef sched::registers *(*int_handler_t) (struct int_data *, error_code_t, sched::registers *);
 
+enum int_handler_type
+{
+	normal,
+	first,
+	reg
+};
+
 
 // load the idt
 void idt_init (void);
 
-bool reg_int_handler (u8 vec, int_handler_t handler, bool first);
+bool reg_int_handler (u8 vec, int_handler_t handler, int_handler_type type);
 void rem_int_handler (u8 vec, int_handler_t handler);
 
 // remap pic controllers

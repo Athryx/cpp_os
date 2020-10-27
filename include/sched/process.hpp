@@ -13,12 +13,11 @@ namespace sched
 	class process : public util::list_node
 	{
 		public:
-			// FIXME: map kernel pages in
 			process (u8 uid);
-			// TODO: call thread_block to delete threads
 			~process ();
 
 			// TODO: add dynamic linking and read, write, and execute protect sections
+			// FIXME: map kernel pages into process
 			static process *load_elf (void *program, usize len, u8 uid);
 
 			inline u8 get_uid () { return uid; }

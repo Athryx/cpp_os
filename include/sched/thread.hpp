@@ -36,7 +36,6 @@ namespace sched
 		u16 ds;
 	} __attribute__ ((packed));
 
-	// FIXME: fix make sure to switch virt addr
 	class thread : public util::list_node
 	{
 		private:
@@ -112,7 +111,6 @@ namespace sched
 			// TODO: make stack regrowable
 			// TODO: put nonexistant page on end of stack to prevent stack overflows
 			thread (process &proc, thread_func_t func);
-			// FIXME: implement destructor
 			~thread ();
 
 			void block (u8 state);
@@ -137,8 +135,9 @@ namespace sched
 			u64 time;
 
 			u8 state;
-		private:
+
 			process &proc;
+		private:
 
 			usize stack_start;
 			usize stack_size;

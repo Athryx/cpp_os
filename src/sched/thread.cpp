@@ -27,15 +27,16 @@ static void lock_all (void);
 static void unlock_all (void);
 
 extern "C" void int_sched (void);
+extern "C" void load_cr3 (usize cr3);
 
 
+// FIXME: make interrupt actually set segment registers
 static sched::registers *sched_time_handler (int_data *data, error_code_t error_code, sched::registers *regs)
 {
 	sched::thread_c->regs = *regs;
 	sched::thread_c->regs.rip = data->rip;
 	sched::thread_c->regs.rflags = data->rflags;
 
-	// FIXME: currently this will be innacurate because this interrupt function is called first
 	u64 nsec = time_nsec_nolatch ();
 
 	lock_all ();
@@ -105,8 +106,8 @@ static void unlock_all (void)
 
 void sched::init ()
 {
-	reg_int_handler (IRQ_TIMER, sched_time_handler, true);
-	reg_int_handler (INT_SCHED, sched_int_handler, true);
+	reg_int_handler (IRQ_TIMER, sched_time_handler, int_handler_type::reg);
+	reg_int_handler (INT_SCHED, sched_int_handler, int_handler_type::reg);
 }
 
 sched::registers *sched::schedule ()
@@ -131,6 +132,8 @@ sched::registers *sched::schedule ()
 	{
 		thread_c->update_time ();
 
+		usize cr3_save = thread_c->proc.addr_space.get_cr3 ();
+
 		if (thread_c->state == T_RUNNING)
 		{
 			// appending to this list will remove it from other list
@@ -140,6 +143,10 @@ sched::registers *sched::schedule ()
 
 		thread_c = (thread *) t_list[T_READY].pop_start ();
 		thread_c->state = T_RUNNING;
+
+		usize cr3_new = thread_c->proc.addr_space.get_cr3 ();
+		if (cr3_new != cr3_save)
+			load_cr3 (cr3_new);
 
 		return &thread_c->regs;
 	}

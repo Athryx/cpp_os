@@ -1,12 +1,15 @@
 %include "asm_def.asm"
 
 global int_sched
-global thread_userspace
+global load_cr3
 
 section .text
 bits 64
 int_sched:
 	int INT_SCHED
+	ret
+load_cr3:
+	mov cr3, rdi
 	ret
 thread_userspace:
 	mov ax, 0x1b	; userspace data segment and rpl 3

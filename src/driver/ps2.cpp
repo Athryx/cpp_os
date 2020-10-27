@@ -49,7 +49,7 @@ static sched::registers *ps2_int_handler (struct int_data *data, error_code_t er
 
 u8 kbd_init (void)
 {
-	reg_int_handler (IRQ_KEYBOARD, ps2_int_handler, true);
+	reg_int_handler (IRQ_KEYBOARD, ps2_int_handler, int_handler_type::first);
 	outb (PS2_DATA, 0xf4);
 	return 1;
 }

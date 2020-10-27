@@ -54,7 +54,7 @@ extern "C" sched::registers *c_int_handler_##vec (struct int_data *data, error_c
 	{									\
 		if (int_handlers[vec][i] != NULL)				\
 		{								\
-			if (i == 0)						\
+			if (i == MAX_HANDLERS - 1)						\
 				out = int_handlers[vec][0] (data, error, regs);	\
 			else							\
 				int_handlers[vec][i] (data, error, regs);	\
@@ -78,7 +78,7 @@ int_handler_t int_handlers[256][MAX_HANDLERS];
 
 void idt_init (void);
 static void idt_add_entry (u8 vec, void *func, u8 attr);
-bool reg_int_handler (u8 vec, int_handler_t handler, bool first);
+bool reg_int_handler (u8 vec, int_handler_t handler, int_handler_type type);
 void rem_int_handler (u8 vec, int_handler_t handler);
 
 
@@ -203,9 +203,9 @@ static void idt_add_entry (u8 vec, void *func, u8 attr)
 }
 
 // maybe later ill check which ones actually have an error code
-bool reg_int_handler (u8 vec, int_handler_t handler, bool first)
+bool reg_int_handler (u8 vec, int_handler_t handler, int_handler_type type)
 {
-	if (first)
+	if (type == int_handler_type::first)
 	{
 		if (int_handlers[vec][0] != NULL)
 			return false;
@@ -213,10 +213,18 @@ bool reg_int_handler (u8 vec, int_handler_t handler, bool first)
 		return true;
 	}
 
+	if (type == int_handler_type::reg)
+	{
+		if (int_handlers[vec][MAX_HANDLERS - 1] != NULL)
+			return false;
+		int_handlers[vec][MAX_HANDLERS - 1] = handler;
+		return true;
+	}
+
 	u8 i = 1;
 	for (; int_handlers[vec][i] != NULL; i ++)
 	{
-		if (i >= MAX_HANDLERS)
+		if (i >= MAX_HANDLERS - 1)
 			return false;
 	}
 

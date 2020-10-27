@@ -1,4 +1,5 @@
 #include <sched/process.hpp>
+#include <sched/sched_def.hpp>
 #include <types.hpp>
 #include <sched/elf_def.hpp>
 #include <util/misc.hpp>
@@ -20,6 +21,7 @@ sched::process::~process ()
 	// once thread_block is added, mark them to be deleted
 	for (usize i = 0; i < threads.get_len (); i ++)
 	{
+		threads.get (i)->block (T_DESTROY);
 	}
 }
 
@@ -45,6 +47,20 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 	}
 
 	process *out = new process (uid);
+	if (out == NULL)
+	{
+		error("Could not create process object")
+		return NULL;
+	}
+
+	// TODO: this is probably very slow
+	// FIXME: set flags in kernel zone to only be superuser
+	if (!out->addr_space.map_at (kernel_vma, kernel_vma, MAX_SUPPORTED_MEM))
+	{
+		delete out;
+		error("Could not map kernel into program virtual address space")
+		return NULL;
+	}
 
 	elf::p_header *p_hdrs = (elf::p_header *) (prgrm + hdr->p_hdr);
 
@@ -71,7 +87,13 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 		}
 
 		memcpy (mem, (void *) (prgrm + p_hdr.p_offset), p_hdr.p_filesz);
-		out->addr_space.map_at ((usize) mem, p_hdr.p_vaddr, p_hdr.p_memsz);
+
+		if (!out->addr_space.map_at ((usize) mem, p_hdr.p_vaddr, p_hdr.p_memsz))
+		{
+			delete out;
+			error("Could not map program region in virtual address space")
+			return NULL;
+		}
 	}
 
 	thread *init_thread = new thread (*out, (thread_func_t) hdr->entry);

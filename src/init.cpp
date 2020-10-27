@@ -54,8 +54,8 @@ u8 init (void *mb2_table)
 
 	time_init ();
 
-	reg_int_handler (EXC_DOUBLE_FAULT, double_fault, true);
-	reg_int_handler (EXC_PAGE_FAULT, page_fault, false);
+	reg_int_handler (EXC_DOUBLE_FAULT, double_fault, int_handler_type::first);
+	reg_int_handler (EXC_PAGE_FAULT, page_fault, int_handler_type::normal);
 
 	// mem::init will move mb2_table
 	mb2_table = mem::init (mb2_table);
@@ -64,7 +64,7 @@ u8 init (void *mb2_table)
 
 	// temporary
 	kbd_init ();
-	reg_int_handler (IRQ_KEYBOARD, kbd_p, false);
+	reg_int_handler (IRQ_KEYBOARD, kbd_p, int_handler_type::normal);
 
 	return 1;
 }
