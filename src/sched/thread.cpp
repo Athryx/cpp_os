@@ -12,11 +12,6 @@ sched::thread::thread (process &proc, thread_func_t func)
 {
 }
 
-sched::thread::thread (process &proc)
-: proc (proc)
-{
-}
-
-void sched::thread::switch_to ()
+VOID sched::thread::switch_to ()
 {
 }

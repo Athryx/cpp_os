@@ -37,7 +37,6 @@ namespace sched
 	{
 		public:
 			thread (process &proc, thread_func_t func);
-			thread (process &proc);
 
 			void switch_to ();
 

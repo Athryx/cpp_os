@@ -135,7 +135,7 @@ void *mem::addr_space::map (usize phys_addr, usize n)
 
 bool mem::addr_space::map_at (usize phys_addr, usize virt_addr, usize n)
 {
-	if (get_free_space (virt_addr) > n)
+	if (get_free_space (virt_addr) < n)
 		return false;
 
 	phys_map *zone = new phys_map;
@@ -144,8 +144,14 @@ bool mem::addr_space::map_at (usize phys_addr, usize virt_addr, usize n)
 		return false;
 
 	zone->phys_addr = phys_addr;
-	zone->virt_addr = virt_addr;
 	zone->len = n;
+	zone->virt_addr = virt_addr;
+
+	if (!insert_virt_zone (*zone))
+	{
+		delete zone;
+		return false;
+	}
 
 	// i think map internal takes in bytes
 	bool flag = map_internal (phys_addr, virt_addr, n);
@@ -176,6 +182,42 @@ void *mem::addr_space::unmap (usize virt_addr)
 	}
 
 	return NULL;
+}
+
+bool mem::addr_space::reserve (usize virt_addr, usize n)
+{
+	if (get_free_space (virt_addr) < n)
+		return false;
+
+	phys_reserve *zone = new phys_reserve;
+
+	if (!zone)
+		return false;
+
+	zone->virt_addr = virt_addr;
+	zone->len = n;
+
+	if (!insert_virt_zone (*zone))
+	{
+		delete zone;
+		return false;
+	}
+
+	return true;
+}
+
+void mem::addr_space::unreserve (usize virt_addr)
+{
+	for (usize i = 0; i < virt_allocs.get_len (); i ++)
+	{
+		struct phys_reserve *map = (struct phys_reserve *) virt_allocs.get (i);
+		if (map->virt_addr == virt_addr && map->type == alloc_type::reserve)
+		{
+			virt_allocs.remove (i);
+			delete map;
+			return;
+		}
+	}
 }
 
 void *mem::addr_space::map_alloc_data (struct virt_allocation *allocation)
@@ -350,6 +392,34 @@ bool mem::addr_space::unmap_internal_recurse (usize &virt_addr, usize &page_n, u
 	return false;
 }
 
+bool mem::addr_space::insert_virt_zone (virt_zone &allocation)
+{
+	virt_zone *last = NULL;
+	virt_zone *current = NULL;
+
+	for (usize i = 0; i < virt_allocs.get_len (); i ++)
+	{
+		last = current;
+		current = (virt_zone *) virt_allocs.get (i);
+
+		if (allocation.virt_addr >= current->virt_addr && allocation.virt_addr < current->virt_addr + current->len)
+			return false;
+
+		if ((last == NULL || allocation.virt_addr >= last->virt_addr + last->len) && allocation.virt_addr + allocation.len < current->virt_addr)
+		{
+			// shouldn't fail
+			virt_allocs.insert (i, &allocation);
+			return true;
+		}
+	}
+	if (allocation.virt_addr >= current->virt_addr + current->len)
+	{
+		virt_allocs.append (&allocation);
+		return true;
+	}
+	return false;
+}
+
 usize mem::addr_space::find_address (util::linked_list &list, struct virt_zone &allocation)
 {
 	usize addr = 0;
@@ -413,16 +483,12 @@ usize mem::addr_space::get_free_space (usize virt_addr)
 		current = (virt_zone *) virt_allocs.get (i);
 
 		if (virt_addr >= current->virt_addr && virt_addr < current->virt_addr + current->len)
-		{
 			return 0;
-		}
 
 		if ((last == NULL || virt_addr >= last->virt_addr + last->len) && virt_addr < current->virt_addr)
-		{
 			return current->virt_addr - virt_addr;
-		}
 	}
-	return MAX_SUPPORTED_MEM - virt_addr;
+	return virt_addr >= last->virt_addr + last->len ? MAX_SUPPORTED_MEM - virt_addr : 0;
 }
 
 // returns address to page it was set to

@@ -19,7 +19,8 @@ namespace mem
 	enum alloc_type
 	{
 		valloc,
-		map
+		map,
+		reserve
 	};
 
 	struct virt_zone : public util::list_node
@@ -42,6 +43,11 @@ namespace mem
 	struct phys_map : public virt_zone
 	{
 		phys_map () { type = alloc_type::map; }
+	};
+
+	struct phys_reserve : public virt_zone
+	{
+		phys_reserve () { type = alloc_type::reserve; }
 	};
 
 	class addr_space
@@ -71,9 +77,16 @@ namespace mem
 			// addr is a linear kernel space address
 			void *map (usize phys_addr, usize n);
 			// map_at does the same as map, but try to map at specific virtual address, and they return false if it is already taken
+			// TODO: put in alloc list
 			bool map_at (usize phys_addr, usize virt_addr, usize n);
 			// unmaps memory prevously mapped by map
 			void *unmap (usize virt_addr);
+
+			// marks virt_addr zone reserved, so alloc and map will not pick this address
+			// TODO: put in alloc list
+			bool reserve (usize virt_addr, usize n);
+			// marks the zone as no longer reserved
+			void unreserve (usize virt_addr);
 
 		private:
 			void *map_alloc_data (struct virt_allocation *allocation);
@@ -89,6 +102,7 @@ namespace mem
 			// returns true when page table it was examaning needss to be freed
 			bool unmap_internal_recurse (usize &virt_addr, usize &page_n, usize page_level, usize *page_table);
 
+			bool insert_virt_zone (virt_zone &allocation);
 			usize find_address (util::linked_list &list, struct virt_zone &allocation);
 			usize get_free_space (usize virt_addr);
 
