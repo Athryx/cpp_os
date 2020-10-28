@@ -21,7 +21,7 @@ mem::addr_space::addr_space ()
 	insert_virt_zone (kernel_z);
 
 	u16 i = get_bits (kernel_vma, 39, 47);
-	page_set ((usize *) pml4_table, i, kernel_vma, V_WRITE);
+	page_set ((usize *) pml4_table, i, kernel_pdp_table, V_WRITE);
 }
 
 mem::addr_space::~addr_space ()
@@ -590,7 +590,7 @@ usize mem::addr_space::page_set (usize *page_table, u16 i, usize n, usize flags)
 			page_table[i] = n | flags | V_PRESENT;
 		}
 	}
-	return canonical_addr (n & PAGE_ADDR_POS);
+	return canonical_addr (n);
 }
 
 

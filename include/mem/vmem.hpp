@@ -114,7 +114,7 @@ namespace mem
 			// translates a virtual address to a kernel addres which points to the start of the page
 			void *translate (usize virt_addr);
 
-			inline usize get_cr3 () { return pml4_table; }
+			inline usize get_cr3 () { return pml4_table - kernel_vma; }
 
 		private:
 			void *map_alloc_data (struct virt_allocation *allocation);

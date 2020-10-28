@@ -16,7 +16,7 @@ namespace sched
 			process (u8 uid);
 			~process ();
 
-			// TODO: add dynamic linking and read, write, and execute protect sections
+			// TODO: add dynamic linking
 			// FIXME: map kernel pages into process
 			static process *load_elf (void *program, usize len, u8 uid);
 
