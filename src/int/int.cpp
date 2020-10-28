@@ -54,7 +54,7 @@ extern "C" sched::registers *c_int_handler_##vec (struct int_data *data, error_c
 	{									\
 		if (int_handlers[vec][i] != NULL)				\
 		{								\
-			if (i == MAX_HANDLERS - 1)						\
+			if (i == MAX_HANDLERS - 1)				\
 				out = int_handlers[vec][0] (data, error, regs);	\
 			else							\
 				int_handlers[vec][i] (data, error, regs);	\

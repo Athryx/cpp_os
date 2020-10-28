@@ -6,6 +6,7 @@
 #include <mem/mem_def.hpp>
 
 
+extern mem::pallocator allocators[MAX_MEM_NODES];
 namespace mem
 {
 	// returns new location of mb2 table

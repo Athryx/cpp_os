@@ -10,6 +10,7 @@
 #include <syscall.hpp>
 #include <mem/mem.hpp>
 #include <mem/kmem.hpp>
+#include <sched/process.hpp>
 #include <sched/thread.hpp>
 
 
@@ -26,7 +27,7 @@ static sched::registers *double_fault (struct int_data* data, error_code_t error
 
 static sched::registers *page_fault (struct int_data* data, error_code_t error_code, sched::registers *regs)
 {
-	kprintf ("page fault\n");
+	panic ("page fault");
 	return NULL;
 }
 
@@ -61,6 +62,9 @@ u8 init (void *mb2_table)
 	mb2_table = mem::init (mb2_table);
 
 	mem::kmem_init ();
+
+	sched::proc_init ();
+	sched::init ();
 
 	// temporary
 	kbd_init ();

@@ -69,6 +69,9 @@ void *pallocator::alloc (usize n)
 void *pallocator::allocz (usize n)
 {
 	void *out = alloc (n);
+	if (out == NULL)
+		return NULL;
+
 	memset (out, n, 0);
 	return out;
 }
@@ -97,6 +100,9 @@ void *pallocator::oalloc (u8 order)
 void *pallocator::oallocz (u8 order)
 {
 	void *out = oalloc (order);
+	if (out == NULL)
+		return NULL;
+
 	memset (out, get_order_size (order), 0);
 	return out;
 }

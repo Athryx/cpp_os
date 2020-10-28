@@ -30,7 +30,10 @@ namespace sched
 	};
 
 
-	extern sched::process *proc_c;
+	extern util::linked_list *proc_list;
+
+
+	void proc_init (void);
 }
 
 namespace elf

@@ -8,7 +8,10 @@
 #include <mem/mem.hpp>
 
 
-sched::process *proc_c = NULL;
+util::linked_list *sched::proc_list;
+
+
+extern "C" void load_cr3 (usize cr3);
 
 
 sched::process::process (u8 uid)
@@ -55,12 +58,6 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 
 	// TODO: this is probably very slow
 	// FIXME: set flags in kernel zone to only be superuser
-	if (!out->addr_space.map_at (kernel_vma, kernel_vma, MAX_SUPPORTED_MEM))
-	{
-		delete out;
-		error("Could not map kernel into program virtual address space")
-		return NULL;
-	}
 
 	elf::p_header *p_hdrs = (elf::p_header *) (prgrm + hdr->p_hdr);
 
@@ -113,4 +110,18 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 	}
 
 	return out;
+}
+
+
+void sched::proc_init (void)
+{
+	proc_list = new util::linked_list;
+	if (!proc_list)
+		panic ("Couldn't make process list");
+
+	process *proc = new process (KUID);
+	if (!proc)
+		panic ("Couldn't make kernel process data");
+
+	load_cr3 (proc->addr_space.get_cr3 ());
 }

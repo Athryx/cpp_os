@@ -1,12 +1,11 @@
-Memory:
+far future:
+make slab allocator
 
-figure out why anything past first page isn't working
-
-test pallocator realloc function better
 have max order be dynamically updated depending on free memory
 
 better memory zone handling than just global alloc function
 
-make slab allocator
+make initfs build script work with crtbegin.o and crtend.o
 
-make delete work with kernel allocator
+current:
+make map_kernel method which uses big pages

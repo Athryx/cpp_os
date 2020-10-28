@@ -40,12 +40,22 @@ int_handler_ %+ %1 %+ :
 	je .restore
 
 	; set registers according to output
-	;mov rcx, [rax + registers.rsp]
-	;mov [r15 + int_data.rsp], rcx
-	;mov rcx, [rax + registers.rip]
-	;mov [r15 + int_data.rip], rcx
-	;mov rcx, [rax + registers.rflags]
-	;mov [r15 + int_data.rflags], rcx
+	mov rcx, [rax + registers.rsp]
+	mov [r15 + int_data.rsp], rcx
+	mov rcx, [rax + registers.rip]
+	mov [r15 + int_data.rip], rcx
+	mov rcx, [rax + registers.rflags]
+	mov [r15 + int_data.rflags], rcx
+
+	mov rcx, 0
+	mov cx, [rax + registers.ds]
+	mov ds, cx
+	mov es, cx
+	mov fs, cx
+	mov gs, cx
+	mov qword [r15 + int_data.ss], rcx
+	mov cx, [rax + registers.cs]
+	mov qword [r15 + int_data.cs], rcx
 
 	mov rbx, [rax + registers.rbx]
 	mov rcx, [rax + registers.rcx]
@@ -124,12 +134,22 @@ int_handler_ %+ %1 %+ :
 	je .restore
 
 	; set registers according to output
-	;mov rcx, [rax + registers.rsp]
-	;mov [r15 + int_data.rsp], rcx
-	;mov rcx, [rax + registers.rip]
-	;mov [r15 + int_data.rip], rcx
-	;mov rcx, [rax + registers.rflags]
-	;mov [r15 + int_data.rflags], rcx
+	mov rcx, [rax + registers.rsp]
+	mov [r15 + int_data.rsp], rcx
+	mov rcx, [rax + registers.rip]
+	mov [r15 + int_data.rip], rcx
+	mov rcx, [rax + registers.rflags]
+	mov [r15 + int_data.rflags], rcx
+
+	mov rcx, 0
+	mov cx, [rax + registers.ds]
+	mov ds, cx
+	mov es, cx
+	mov fs, cx
+	mov gs, cx
+	mov qword [r15 + int_data.ss], rcx
+	mov cx, [rax + registers.cs]
+	mov qword [r15 + int_data.cs], rcx
 
 	mov rbx, [rax + registers.rbx]
 	mov rcx, [rax + registers.rcx]
@@ -215,12 +235,22 @@ int_handler_ %+ %1 %+ :
 	je .restore
 
 	; set registers according to output
-	;mov rcx, [r14 + registers.rsp]
-	;mov [r15 + int_data.rsp], rcx
-	;mov rcx, [r14 + registers.rip]
-	;mov [r15 + int_data.rip], rcx
-	;mov rcx, [r14 + registers.rflags]
-	;mov [r15 + int_data.rflags], rcx
+	mov rcx, [r14 + registers.rsp]
+	mov [r15 + int_data.rsp], rcx
+	mov rcx, [r14 + registers.rip]
+	mov [r15 + int_data.rip], rcx
+	mov rcx, [r14 + registers.rflags]
+	mov [r15 + int_data.rflags], rcx
+
+	mov rcx, 0
+	mov cx, [rax + registers.ds]
+	mov ds, cx
+	mov es, cx
+	mov fs, cx
+	mov gs, cx
+	mov qword [r15 + int_data.ss], rcx
+	mov cx, [rax + registers.cs]
+	mov qword [r15 + int_data.cs], rcx
 
 	mov rax, [r14 + registers.rax]
 	mov rbx, [r14 + registers.rbx]

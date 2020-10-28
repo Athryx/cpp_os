@@ -3,6 +3,7 @@ extern long_mode_start
 extern KERNEL_LMA
 
 global PML4_table
+global PDP_table
 
 section .boot_text
 bits 32
@@ -47,7 +48,7 @@ start:
 	test edx, 1 << 29	; 29th bit says if long mode is supported, error if failed
 	jz .no_long_mode
 
-; map kernel pages, kernel is at 0xffffffffc0000000
+; map kernel pages, kernel is at 0xffffff8000000000
 	mov eax, PDP_table	; set up first entry of PML4 table
 	or eax, 0b11		; set exists and writable bits
 	mov [PML4_table], eax
@@ -64,7 +65,7 @@ start:
 .map_PD_table:
 	mov [PDP_table + ecx * 8], eax
 	mov [PDP_table + 2 + ecx * 8], edx
-	add edx, 0x00040000		; 1gib offset between page mappings
+	add edx, 0x00004000		; 1gib offset between page mappings
 
 	inc ecx
 	cmp ecx, 512

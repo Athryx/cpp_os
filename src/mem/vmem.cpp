@@ -5,9 +5,23 @@
 #include <util/misc.hpp>
 
 
+extern usize PDP_table;
+static usize kernel_pdp_table = 0;
+
+
 mem::addr_space::addr_space ()
 {
 	pml4_table = (usize) mem::allocz (PAGE_SIZE);
+
+	if (kernel_pdp_table == 0)
+	{
+		kernel_pdp_table = (usize) &PDP_table;
+	}
+
+	insert_virt_zone (kernel_z);
+
+	u16 i = get_bits (kernel_vma, 39, 47);
+	page_set ((usize *) pml4_table, i, kernel_vma, V_WRITE);
 }
 
 mem::addr_space::~addr_space ()
@@ -15,7 +29,7 @@ mem::addr_space::~addr_space ()
 	mem::free ((void *) pml4_table);
 }
 
-void *mem::addr_space::alloc (usize n)
+void *mem::addr_space::alloc (usize n, usize flags)
 {
 	// there might
 	if (n > mem::get_free_space ())
@@ -23,6 +37,7 @@ void *mem::addr_space::alloc (usize n)
 
 	struct virt_allocation *allocation = new struct virt_allocation ();
 	allocation->len = n;
+	allocation->flags = flags;
 
 	usize temp = n;
 	usize alloc_size = mem::get_order_size (mem::get_order (n));
@@ -34,7 +49,7 @@ void *mem::addr_space::alloc (usize n)
 			return NULL;
 		}
 
-		void *mem = alloc (alloc_size);
+		void *mem = alloc (alloc_size, flags);
 		if (!mem)
 		{
 			alloc_size >>= 1;
@@ -104,7 +119,7 @@ void mem::addr_space::free (void *mem)
 	}
 }
 
-void *mem::addr_space::map (usize phys_addr, usize n)
+void *mem::addr_space::map (usize phys_addr, usize n, usize flags)
 {
 	struct phys_map *zone = new struct phys_map;
 
@@ -122,7 +137,7 @@ void *mem::addr_space::map (usize phys_addr, usize n)
 		return NULL;
 	}
 
-	bool flag = map_internal (phys_addr, virt_addr, zone->len);
+	bool flag = map_internal (phys_addr, virt_addr, zone->len, flags);
 
 	if (!flag)
 	{
@@ -134,7 +149,7 @@ void *mem::addr_space::map (usize phys_addr, usize n)
 	return (void *) virt_addr;
 }
 
-bool mem::addr_space::map_at (usize phys_addr, usize virt_addr, usize n)
+bool mem::addr_space::map_at (usize phys_addr, usize virt_addr, usize n, usize flags)
 {
 	// shouldn't be needed
 	//if (get_free_space (virt_addr) < n)
@@ -156,7 +171,7 @@ bool mem::addr_space::map_at (usize phys_addr, usize virt_addr, usize n)
 	}
 
 	// i think map internal takes in bytes
-	bool flag = map_internal (phys_addr, virt_addr, n);
+	bool flag = map_internal (phys_addr, virt_addr, n, flags);
 
 	if (!flag)
 	{
@@ -260,7 +275,7 @@ void *mem::addr_space::map_alloc_data (struct virt_allocation *allocation)
 		struct phys_allocation *zone = allocation->allocations.get (i);
 
 		// this can fail if there is not enough physical memory for page tables
-		if (!map_internal (zone->addr, virt_addr_copy, zone->len))
+		if (!map_internal (zone->addr, virt_addr_copy, zone->len, allocation->flags))
 		{
 			// need to unmap all zones if fail, otherwise there could be a security vulnerablity
 			// first zone won't be mapped
@@ -289,32 +304,32 @@ void *mem::addr_space::translate (usize virt_addr)
 {
 	usize *pml4_t = (usize *) canonical_addr ((pml4_table & PAGE_ADDR_POS) + kernel_vma);
 	usize pml4_i = get_bits (virt_addr, 39, 47);
-	if (!(pml4_t[pml4_i] & PAGE_PRESENT))
+	if (!(pml4_t[pml4_i] & V_PRESENT))
 		return NULL;
 
 	usize *pdp_t = (usize *) canonical_addr ((pml4_t[pml4_i] & PAGE_ENTRIES) + kernel_vma);
 	usize pdp_i = get_bits (virt_addr, 30, 38);
-	if (!(pdp_t[pdp_i] & PAGE_PRESENT))
+	if (!(pdp_t[pdp_i] & V_PRESENT))
 		return NULL;
 
 	usize *pd_t = (usize *) canonical_addr ((pdp_t[pdp_i] & PAGE_ENTRIES) + kernel_vma);
 	usize pd_i = get_bits (virt_addr, 21, 29);
-	if (!(pd_t[pd_i] & PAGE_PRESENT))
+	if (!(pd_t[pd_i] & V_PRESENT))
 		return NULL;
 
 	usize *page_t = (usize *) canonical_addr ((pd_t[pd_i] & PAGE_ENTRIES) + kernel_vma);
 	usize page_i = get_bits (virt_addr, 12, 20);
-	if (!(page_t[page_i] & PAGE_PRESENT))
+	if (!(page_t[page_i] & V_PRESENT))
 		return NULL;
 
 	return (void *) canonical_addr ((page_t[page_i] & PAGE_ENTRIES) + kernel_vma);
 }
 
-bool mem::addr_space::map_internal (usize phys_addr, usize virt_addr, usize n)
+bool mem::addr_space::map_internal (usize phys_addr, usize virt_addr, usize n, usize flags)
 {
 	n = align_up (n, PAGE_SIZE) / PAGE_SIZE;
 	virt_addr &= PAGE_ADDR_POS;
-	bool status = map_internal_recurse (phys_addr, virt_addr, n, n, PAGE_LEVELS - 1, (usize *) pml4_table);
+	bool status = map_internal_recurse (phys_addr, virt_addr, n, n, PAGE_LEVELS - 1, (usize *) pml4_table, flags);
 	if (!status)
 	{
 		unmap_internal (virt_addr, n);
@@ -323,7 +338,7 @@ bool mem::addr_space::map_internal (usize phys_addr, usize virt_addr, usize n)
 	return true;
 }
 
-bool mem::addr_space::map_internal_recurse (usize phys_addr, usize &virt_addr, usize start_page_n, usize &page_n, usize page_level, usize *page_table)
+bool mem::addr_space::map_internal_recurse (usize phys_addr, usize &virt_addr, usize start_page_n, usize &page_n, usize page_level, usize *page_table, usize flags)
 {
 	// wrong
 	#ifdef x64
@@ -333,6 +348,9 @@ bool mem::addr_space::map_internal_recurse (usize phys_addr, usize &virt_addr, u
 
 	while (page_n)
 	{
+		//kprintf ("%x\n", start_page_n - page_n);
+		//if (start_page_n - page_n == 0x13800)
+		//	kprintf ("here");
 		// length was too long, or end of current page table
 		if (i >= PAGE_ENTRIES)
 			return page_level < PAGE_LEVELS - 1;
@@ -340,13 +358,13 @@ bool mem::addr_space::map_internal_recurse (usize phys_addr, usize &virt_addr, u
 		if (page_level)
 		{
 			usize page_table_p;
-			if (!(page_table[i] & PAGE_PRESENT))
+			if (!(page_table[i] & V_PRESENT))
 			{
 				usize temp = (usize) mem::allocz (PAGE_SIZE);
 				if (temp == 0)
 					return false;
 
-				page_table_p = page_set (page_table, i, temp);
+				page_table_p = page_set (page_table, i, temp, flags);
 				page_counter_add (page_table[0], 1);
 			}
 			else
@@ -354,16 +372,16 @@ bool mem::addr_space::map_internal_recurse (usize phys_addr, usize &virt_addr, u
 				page_table_p = canonical_addr (page_table[i] & PAGE_ADDR_POS);
 			}
 
-			bool temp_b = map_internal_recurse (phys_addr, virt_addr, start_page_n, page_n, page_level - 1, (usize *) page_table_p);
+			bool temp_b = map_internal_recurse (phys_addr, virt_addr, start_page_n, page_n, page_level - 1, (usize *) page_table_p, flags);
 			if (!temp_b)
 				return false;
 		}
 		else
 		{
-			if (!(page_table[i] & PAGE_PRESENT))
+			if (!(page_table[i] & V_PRESENT))
 				page_counter_add (page_table[0], 1);
 
-			page_set (page_table, i, phys_addr + PAGE_SIZE * (start_page_n - page_n));
+			page_set (page_table, i, phys_addr + PAGE_SIZE * (start_page_n - page_n), flags);
 			page_n --;
 		}
 		i ++;
@@ -394,7 +412,7 @@ bool mem::addr_space::unmap_internal_recurse (usize &virt_addr, usize &page_n, u
 
 		if (page_level)
 		{
-			if (!(page_table[i] & PAGE_PRESENT))
+			if (!(page_table[i] & V_PRESENT))
 			{
 				// adjust accounting info to be correct
 				usize page_n_sub = 1 << (PAGE_TABLE_BITS * page_level);
@@ -414,10 +432,10 @@ bool mem::addr_space::unmap_internal_recurse (usize &virt_addr, usize &page_n, u
 		}
 		else
 		{
-			if (page_table[i] & PAGE_PRESENT)
+			if (page_table[i] & V_PRESENT)
 				page_counter_add (page_table[0], -1);
 
-			page_set (page_table, i, 0);
+			page_set (page_table, i, 0, 0);
 			page_n --;
 		}
 
@@ -460,7 +478,8 @@ bool mem::addr_space::insert_virt_zone (virt_zone &allocation)
 			return true;
 		}
 	}
-	if (allocation.virt_addr >= current->virt_addr + current->len)
+	// FIXME: issues with integer overflow
+	if ((current == NULL || allocation.virt_addr >= current->virt_addr + current->len) && allocation.virt_addr + allocation.len <= MAX_MEM)
 	{
 		virt_allocs.append (&allocation);
 		return true;
@@ -536,24 +555,25 @@ usize mem::addr_space::get_free_space (usize virt_addr)
 		if ((last == NULL || virt_addr >= last->virt_addr + last->len) && virt_addr < current->virt_addr)
 			return current->virt_addr - virt_addr;
 	}
-	return virt_addr >= last->virt_addr + last->len ? MAX_SUPPORTED_MEM - virt_addr : 0;
+	return current == NULL || virt_addr >= current->virt_addr + current->len ? MAX_MEM - virt_addr : 0;
 }
 
 // returns address to page it was set to
-usize mem::addr_space::page_set (usize *page_table, u16 i, usize n)
+usize mem::addr_space::page_set (usize *page_table, u16 i, usize n, usize flags)
 {
+	n = n & PAGE_ADDR_POS;
+	flags = flags & PAGE_FLAGS_POS;
 	if (n == 0)
 	{
 		if (i == 0)
 		{
 			// have to do something special because of page counter in index 0
 			usize c_value = page_table[i] & ~PAGE_DATA_POS;
-			n = n & PAGE_DATA_POS;
-			page_table[i] = (n | c_value) & ~PAGE_PRESENT;
+			page_table[i] = (n | c_value) & ~V_PRESENT;
 		}
 		else
 		{
-			page_table[i] = n & ~PAGE_PRESENT;
+			page_table[i] = n & ~V_PRESENT;
 		}
 		return 0;
 	}
@@ -563,12 +583,11 @@ usize mem::addr_space::page_set (usize *page_table, u16 i, usize n)
 		{
 			// have to do something special because of page counter in index 0
 			usize c_value = page_table[i] & ~PAGE_DATA_POS;
-			n = n & PAGE_DATA_POS;
-			page_table[i] = n | c_value | PAGE_PRESENT;
+			page_table[i] = n | flags | c_value | V_PRESENT;
 		}
 		else
 		{
-			page_table[i] = n | PAGE_PRESENT;
+			page_table[i] = n | flags | V_PRESENT;
 		}
 	}
 	return canonical_addr (n & PAGE_ADDR_POS);
