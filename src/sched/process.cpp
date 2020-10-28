@@ -85,7 +85,11 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 
 		memcpy (mem, (void *) (prgrm + p_hdr.p_offset), p_hdr.p_filesz);
 
-		if (!out->addr_space.map_at ((usize) mem, p_hdr.p_vaddr, p_hdr.p_memsz))
+		usize flags = 0;
+		flags |= (p_hdr.flags & ELF_EXEC ? 0 : V_XD);
+		flags |= (p_hdr.flags & ELF_WRITE ? V_WRITE : 0);
+
+		if (!out->addr_space.map_at ((usize) mem, p_hdr.p_vaddr, p_hdr.p_memsz, flags))
 		{
 			delete out;
 			error("Could not map program region in virtual address space")

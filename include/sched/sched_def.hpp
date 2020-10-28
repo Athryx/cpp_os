@@ -18,3 +18,7 @@
 #define KUID 0
 // superuser uid
 #define SUID 1
+
+#define ELF_EXEC 1
+#define ELF_WRITE 2
+#define ELF_READ 4

@@ -159,7 +159,7 @@ sched::thread::thread (process &proc, thread_func_t func)
 : proc (proc),
 stack_size (STACK_INITIAL_SIZE)
 {
-	stack_start = (usize) proc.addr_space.alloc (stack_size);
+	stack_start = (usize) proc.addr_space.alloc (stack_size, V_WRITE | V_XD);
 
 	if (proc.get_uid () == 0)
 		regs = kernel_regs;
