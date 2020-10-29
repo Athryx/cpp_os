@@ -72,9 +72,13 @@ namespace mem
 	};
 
 	// TODO: adde structured allocation function
+	// TODO: add a better way to sync tlb cache when pages removed
 	class addr_space
 	{
 		public:
+			// all fields n are in bytes
+			// unless otherwise noted, all address and len fields are automatically page aligned
+
 			// FIXME: handle case when there is not enough memory for pml4_table
 			addr_space ();
 			// TODO: finish
@@ -114,6 +118,12 @@ namespace mem
 			// translates a virtual address to a kernel addres which points to the start of the page
 			void *translate (usize virt_addr);
 
+			// syncs tlb cache on virt_zone pointed to by virt_addr
+			void sync_tlb (usize virt_addr);
+			// virt_addr should be page aligned
+			// n should be page aligned
+			void sync_tlb_raw (usize virt_addr, usize n);
+
 			inline usize get_cr3 () { return pml4_table - kernel_vma; }
 
 		private:
@@ -131,7 +141,9 @@ namespace mem
 			bool unmap_internal_recurse (usize &virt_addr, usize &page_n, usize page_level, usize *page_table);
 
 			bool insert_virt_zone (virt_zone &allocation);
-			usize find_address (util::linked_list &list, struct virt_zone &allocation);
+			// finds a virtual address where virt_zone fits, and returns that address
+			// it also inserts the virt zone in the alloc_list, and sets the virt_addr field in virt_zone
+			usize find_address (struct virt_zone &allocation);
 			usize get_free_space (usize virt_addr);
 
 			#ifdef x64

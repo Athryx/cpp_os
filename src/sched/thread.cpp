@@ -52,6 +52,8 @@ static sched::registers *sched_time_handler (int_data *data, error_code_t error_
 		}
 	}
 
+	unlock_all ();
+
 	if (nsec - nsec_last >= THREAD_TIME_SLICE)
 	{
 		lock ();
@@ -59,8 +61,6 @@ static sched::registers *sched_time_handler (int_data *data, error_code_t error_
 		unlock ();
 		return out;
 	}
-
-	unlock_all ();
 
 	return NULL;
 }
@@ -70,7 +70,11 @@ static sched::registers *sched_int_handler (int_data *data, error_code_t error_c
 	sched::thread_c->regs.rip = data->rip;
 	sched::thread_c->regs.rflags = data->rflags;
 
-	return sched::schedule ();
+	lock ();
+	auto *out = sched::schedule ();
+	unlock ();
+
+	return out;
 }
 
 // FIXME: make these actually safe
@@ -132,7 +136,7 @@ sched::registers *sched::schedule ()
 	{
 		thread_c->update_time ();
 
-		usize cr3_save = thread_c->proc.addr_space.get_cr3 ();
+		auto &proc_c_save = proc_c ();
 
 		if (thread_c->state == T_RUNNING)
 		{
@@ -142,11 +146,11 @@ sched::registers *sched::schedule ()
 		}
 
 		thread_c = (thread *) t_list[T_READY].pop_start ();
+		t_list[T_RUNNING].append (thread_c);
 		thread_c->state = T_RUNNING;
 
-		usize cr3_new = thread_c->proc.addr_space.get_cr3 ();
-		if (cr3_new != cr3_save)
-			load_cr3 (cr3_new);
+		if (&proc_c () != &proc_c_save)
+			load_cr3 (proc_c ().addr_space.get_cr3 ());
 
 		return &thread_c->regs;
 	}
@@ -159,19 +163,14 @@ sched::thread::thread (process &proc, thread_func_t func)
 : proc (proc),
 stack_size (STACK_INITIAL_SIZE)
 {
-	stack_start = (usize) proc.addr_space.alloc (stack_size, V_WRITE | V_XD);
+	init (func);
+}
 
-	if (proc.get_uid () == 0)
-		regs = kernel_regs;
-	else if (proc.get_uid () == 1)
-		regs = superuser_regs;
-	else
-		regs = user_regs;
-
-	regs.rsp = stack_start + stack_size - 1;
-	regs.rip = (usize) func;
-
-	t_list[T_READY].append (this);
+sched::thread::thread (process &proc, thread_func_t func, usize stack_size)
+: proc (proc),
+stack_size (stack_size)
+{
+	init (func);
 }
 
 sched::thread::~thread ()
@@ -236,4 +235,48 @@ u64 sched::thread::update_time (u64 nsec)
 	thread_c->time += nsec_current - nsec_last;
 	nsec_last = nsec_current;
 	return thread_c->time;
+}
+
+void sched::thread::init (thread_func_t func)
+{
+	// if the idle thread has been created
+	static bool init_done = false;
+
+	if (proc.get_uid () == 0)
+		regs = kernel_regs;
+	else if (proc.get_uid () == 1)
+		regs = superuser_regs;
+	else
+		regs = user_regs;
+
+	if (init_done)
+	{
+		stack_start = (usize) proc.addr_space.alloc (stack_size, V_WRITE | V_XD);
+		// this should maybe be done better in future
+		// FIXME: might break if bad timing, this needs to be locked
+		if (&proc_c ().addr_space == &proc.addr_space)
+			proc.addr_space.sync_tlb (stack_start);
+
+		regs.rsp = stack_start + stack_size - 8;
+		regs.rip = (usize) func;
+
+		t_list[T_READY].append (this);
+		state = T_READY;
+	}
+	else
+	{
+		stack_start = 0;
+
+		t_list[T_RUNNING].append (this);
+		thread_c = this;
+		state = T_RUNNING;
+
+		init_done = true;
+	}
+
+	if (!proc.add_thread (*this))
+	{
+		error("Could not add thread to thread list");
+		panic ("Recovering from this error is unimplmented");
+	}
 }

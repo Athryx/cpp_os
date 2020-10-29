@@ -10,6 +10,7 @@
 #include <util/time.hpp>
 #include <arch/x64/special.hpp>
 #include <mem/mem.hpp>
+#include <sched/process.hpp>
 #include <sched/thread.hpp>
 
 
@@ -139,6 +140,7 @@ extern "C" [[ noreturn ]] void _start (void *mb2_table)
 		panic ("init failed");
 	}
 
+	sched::thread thread (sched::proc_c (), main_thread);
 	//main_thread ();
 	// test
 	//kthread_new (thread_2);

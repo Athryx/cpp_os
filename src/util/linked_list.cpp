@@ -152,6 +152,9 @@ list_node *linked_list::get (usize index)
 	if (index > len)
 		return NULL;
 
+	if (current == NULL)
+		current = start;
+
 	isize diff_start = index;
 	isize diff_end = len - index - 1;
 	isize diff_middle = index - current_i;

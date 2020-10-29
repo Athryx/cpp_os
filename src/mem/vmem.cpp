@@ -9,6 +9,9 @@ extern usize PDP_table;
 static usize kernel_pdp_table = 0;
 
 
+extern "C" void sync_page (usize addr);
+
+
 mem::addr_space::addr_space ()
 {
 	pml4_table = (usize) mem::allocz (PAGE_SIZE);
@@ -31,11 +34,17 @@ mem::addr_space::~addr_space ()
 
 void *mem::addr_space::alloc (usize n, usize flags)
 {
-	// there might
+	if (n == 0)
+		return NULL;
+
 	if (n > mem::get_free_space ())
 		return NULL;
 
 	struct virt_allocation *allocation = new struct virt_allocation ();
+	if (allocation == NULL)
+		return NULL;
+
+	n = align_up (n, PAGE_SIZE);
 	allocation->len = n;
 	allocation->flags = flags;
 
@@ -49,7 +58,7 @@ void *mem::addr_space::alloc (usize n, usize flags)
 			return NULL;
 		}
 
-		void *mem = alloc (alloc_size, flags);
+		void *mem = mem::alloc (alloc_size);
 		if (!mem)
 		{
 			alloc_size >>= 1;
@@ -121,6 +130,9 @@ void mem::addr_space::free (void *mem)
 
 void *mem::addr_space::map (usize phys_addr, usize n, usize flags)
 {
+	if (n == 0)
+		return NULL;
+
 	struct phys_map *zone = new struct phys_map;
 
 	if (!zone)
@@ -128,7 +140,7 @@ void *mem::addr_space::map (usize phys_addr, usize n, usize flags)
 
 	zone->phys_addr = phys_addr;
 	zone->len = n;
-	usize virt_addr = find_address (virt_allocs, *zone);
+	usize virt_addr = find_address (*zone);
 
 	if (!virt_addr)
 	{
@@ -154,6 +166,8 @@ bool mem::addr_space::map_at (usize phys_addr, usize virt_addr, usize n, usize f
 	// shouldn't be needed
 	//if (get_free_space (virt_addr) < n)
 	//	return false;
+	if (n == 0)
+		return false;
 
 	phys_map *zone = new phys_map;
 
@@ -203,13 +217,16 @@ void *mem::addr_space::unmap (usize virt_addr)
 
 void *mem::addr_space::reserve (usize n)
 {
+	if (n == 0)
+		return NULL;
+
 	struct phys_reserve *zone = new struct phys_reserve;
 
 	if (!zone)
 		return NULL;
 
 	zone->len = n;
-	usize virt_addr = find_address (virt_allocs, *zone);
+	usize virt_addr = find_address (*zone);
 
 	if (!virt_addr)
 	{
@@ -258,9 +275,29 @@ void mem::addr_space::unreserve (usize virt_addr)
 	}
 }
 
+void mem::addr_space::sync_tlb (usize virt_addr)
+{
+	virt_addr = align_down (virt_addr, PAGE_SIZE);
+
+	for (usize i = 0; i < virt_allocs.get_len (); i ++)
+	{
+		virt_zone *zone = (virt_zone *) virt_allocs.get (i);
+		sync_tlb_raw (zone->virt_addr, zone->len);
+	}
+}
+
+void mem::addr_space::sync_tlb_raw (usize virt_addr, usize n)
+{
+	for (usize addr = virt_addr; addr < virt_addr + n; addr += PAGE_SIZE)
+	{
+		sync_page (addr);
+	}
+}
+
 void *mem::addr_space::map_alloc_data (struct virt_allocation *allocation)
 {
-	usize virt_addr = find_address (virt_allocs, *allocation);
+	// this sets virt_addr
+	usize virt_addr = find_address (*allocation);
 	usize virt_addr_copy = virt_addr;
 
 	if (virt_addr == 0)
@@ -294,8 +331,6 @@ void *mem::addr_space::map_alloc_data (struct virt_allocation *allocation)
 
 		virt_addr_copy += zone->len;
 	}
-
-	allocation->virt_addr = (usize) virt_addr;
 
 	return (void *) virt_addr;
 }
@@ -487,31 +522,24 @@ bool mem::addr_space::insert_virt_zone (virt_zone &allocation)
 	return false;
 }
 
-usize mem::addr_space::find_address (util::linked_list &list, struct virt_zone &allocation)
+usize mem::addr_space::find_address (struct virt_zone &allocation)
 {
 	usize addr = 0;
-	usize i = list.get_len ();
-	struct virt_zone *current = (struct virt_zone *) list.get (i - 1);
+	usize i = virt_allocs.get_len ();
+
+	// case of zero is already handled
+	struct virt_zone *current = (struct virt_zone *) virt_allocs.get (i - 1);
+	if (current->type != alloc_type::kernel)
+	{
+		error("Expected the end of virt_alloc list to have alloc_type kernel")
+		return 0;
+	}
 	struct virt_zone *last = NULL;
 
-	if (i == 0)
+	if (i == 1 && current->virt_addr - PAGE_SIZE >= allocation.len)
 	{
-		// don't null pointer, it is returned on failure
 		addr = PAGE_SIZE;
-		list.append (&allocation);
-	}
-	else if (i == 1 && (kernel_vma - ((usize) current + current->len)) >= allocation.len)
-	{
-		if (kernel_vma - ((usize) current + current->len) >= allocation.len)
-		{
-			addr = (usize) current + current->len;
-			list.append (&allocation);
-		}
-		else if ((usize) current - PAGE_SIZE >= allocation.len)
-		{
-			addr = (usize) current + current->len;
-			list.prepend (&allocation);
-		}
+		virt_allocs.prepend (&allocation);
 	}
 	else if (i > 1)
 	{
@@ -520,15 +548,21 @@ usize mem::addr_space::find_address (util::linked_list &list, struct virt_zone &
 		for (; i >= 0; i --)
 		{
 			last = current;
-			current = (struct virt_zone *) list.get (i);
-			usize current_end = (usize) current + current->len;
-			if (((usize) last - current_end)  >= allocation.len)
+			current = (struct virt_zone *) virt_allocs.get (i);
+			usize current_end = current->virt_addr + current->len;
+			if ((last->virt_addr - current_end)  >= allocation.len)
 			{
 				// insert in between
-				list.insert (i + 1, &allocation);
+				virt_allocs.insert (i + 1, &allocation);
 				addr = current_end;
 				break;
 			}
+		}
+
+		if (addr == 0 && (usize) current - PAGE_SIZE >= allocation.len)
+		{
+			addr = PAGE_SIZE;
+			virt_allocs.prepend (&allocation);
 		}
 	}
 

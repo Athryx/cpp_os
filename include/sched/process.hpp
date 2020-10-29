@@ -20,6 +20,10 @@ namespace sched
 			// FIXME: map kernel pages into process
 			static process *load_elf (void *program, usize len, u8 uid);
 
+			bool add_thread (thread &thr);
+			// FIXME: unsafe ins some scenarios
+			void rem_thread (thread &thr);
+
 			inline u8 get_uid () { return uid; }
 
 			mem::addr_space addr_space;
@@ -34,6 +38,9 @@ namespace sched
 
 
 	void proc_init (void);
+
+	// only call if thread_c initialized
+	inline process &proc_c (void) { return thread_c->proc; }
 }
 
 namespace elf

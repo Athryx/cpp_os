@@ -56,7 +56,7 @@ namespace sched
 			.r13 = 0,
 			.r14 = 0,
 			.r15 = 0,
-			.rflags = 0,
+			.rflags = 0x3202,
 			.rip = 0,
 			.cs = 0x23,
 			.ds = 0x1b
@@ -79,7 +79,7 @@ namespace sched
 			.r13 = 0,
 			.r14 = 0,
 			.r15 = 0,
-			.rflags = 0,
+			.rflags = 0x202,
 			.rip = 0,
 			.cs = 0x23,
 			.ds = 0x1b
@@ -102,15 +102,17 @@ namespace sched
 			.r13 = 0,
 			.r14 = 0,
 			.r15 = 0,
-			.rflags = 0,
+			.rflags = 0x202,
 			.rip = 0,
 			.cs = 0x08,
 			.ds = 0x10
 			};
+
 		public:
 			// TODO: make stack regrowable
 			// TODO: put nonexistant page on end of stack to prevent stack overflows
 			thread (process &proc, thread_func_t func);
+			thread (process &proc, thread_func_t func, usize stack_size);
 			~thread ();
 
 			void block (u8 state);
@@ -138,6 +140,7 @@ namespace sched
 
 			process &proc;
 		private:
+			void init (thread_func_t);
 
 			usize stack_start;
 			usize stack_size;

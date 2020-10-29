@@ -49,10 +49,6 @@ int_handler_ %+ %1 %+ :
 
 	mov rcx, 0
 	mov cx, [rax + registers.ds]
-	mov ds, cx
-	mov es, cx
-	mov fs, cx
-	mov gs, cx
 	mov qword [r15 + int_data.ss], rcx
 	mov cx, [rax + registers.cs]
 	mov qword [r15 + int_data.cs], rcx
@@ -143,10 +139,6 @@ int_handler_ %+ %1 %+ :
 
 	mov rcx, 0
 	mov cx, [rax + registers.ds]
-	mov ds, cx
-	mov es, cx
-	mov fs, cx
-	mov gs, cx
 	mov qword [r15 + int_data.ss], rcx
 	mov cx, [rax + registers.cs]
 	mov qword [r15 + int_data.cs], rcx
@@ -244,10 +236,6 @@ int_handler_ %+ %1 %+ :
 
 	mov rcx, 0
 	mov cx, [rax + registers.ds]
-	mov ds, cx
-	mov es, cx
-	mov fs, cx
-	mov gs, cx
 	mov qword [r15 + int_data.ss], rcx
 	mov cx, [rax + registers.cs]
 	mov qword [r15 + int_data.cs], rcx

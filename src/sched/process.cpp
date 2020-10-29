@@ -17,6 +17,7 @@ extern "C" void load_cr3 (usize cr3);
 sched::process::process (u8 uid)
 : uid (uid)
 {
+	proc_list->append (this);
 }
 
 sched::process::~process ()
@@ -116,6 +117,23 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 	return out;
 }
 
+bool sched::process::add_thread (thread &thr)
+{
+	return threads.append (&thr);
+}
+
+void sched::process::rem_thread (thread &thr)
+{
+	for (usize i = 0; i < threads.get_len (); i ++)
+	{
+		if (&thr == threads.get (i))
+		{
+			threads.remove (i);
+			break;
+		}
+	}
+}
+
 
 void sched::proc_init (void)
 {
@@ -126,6 +144,10 @@ void sched::proc_init (void)
 	process *proc = new process (KUID);
 	if (!proc)
 		panic ("Couldn't make kernel process data");
+
+	thread *idle_thread = new thread (*proc, NULL, 0);
+	if (!idle_thread)
+		panic ("Couldn't make idle thread data");
 
 	load_cr3 (proc->addr_space.get_cr3 ());
 }
