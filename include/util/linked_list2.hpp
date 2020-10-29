@@ -96,9 +96,9 @@ namespace util
 			// i could implement this, but it would be a little slow
 			// void remove_p (list_node *zone);
 
-			T *get (usize index)
+			T *operator[] (usize index)
 			{
-				list_node2 *node = (list_node2 *) list.get (index);
+				list_node2 *node = (list_node2 *) list[index];
 				if (node == NULL)
 					return NULL;
 

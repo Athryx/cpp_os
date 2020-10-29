@@ -28,7 +28,7 @@ namespace util
 
 			void remove_p (list_node *zone);
 
-			list_node *get (usize index);
+			list_node *operator[] (usize index);
 
 			inline usize get_len () { return len; }
 

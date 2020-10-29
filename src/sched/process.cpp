@@ -25,7 +25,7 @@ sched::process::~process ()
 	// once thread_block is added, mark them to be deleted
 	for (usize i = 0; i < threads.get_len (); i ++)
 	{
-		threads.get (i)->block (T_DESTROY);
+		threads[i]->block (T_DESTROY);
 	}
 }
 
@@ -126,7 +126,7 @@ void sched::process::rem_thread (thread &thr)
 {
 	for (usize i = 0; i < threads.get_len (); i ++)
 	{
-		if (&thr == threads.get (i))
+		if (&thr == threads[i])
 		{
 			threads.remove (i);
 			break;

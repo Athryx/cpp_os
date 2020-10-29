@@ -25,7 +25,7 @@ namespace util
 			bool insert (T in, usize i);
 			T remove (usize i);
 
-			T *get (usize i);
+			T *operator[] (usize i);
 
 			inline usize get_len () { return len; }
 
@@ -129,7 +129,7 @@ T util::array_list<T>::remove (usize i)
 }
 
 template <typename T>
-T *util::array_list<T>::get (usize i)
+T *util::array_list<T>::operator[] (usize i)
 {
 	if (i >= len)
 		return NULL;

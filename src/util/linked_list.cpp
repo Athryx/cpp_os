@@ -18,6 +18,7 @@ current_i (0)
 bool linked_list::prepend (list_node *zone)
 {
 	len ++;
+	current_i ++;
 
 	if (len == 1)
 	{
@@ -60,8 +61,11 @@ bool linked_list::insert (usize index, list_node *zone)
 	if (index == 0)
 		return prepend (zone);
 
+	if (index <= current_i)
+		current_i ++;
+
 	len ++;
-	list_node *temp = get (index);
+	list_node *temp = (*this)[index];
 
 	temp->prev->next = zone;
 	zone->prev = temp->prev;
@@ -78,6 +82,9 @@ list_node *linked_list::pop_start ()
 
 	len --;
 
+	if (current == start)
+		current = NULL;
+
 	if (len == 0)
 		return start;
 
@@ -92,6 +99,9 @@ list_node *linked_list::pop ()
 		return NULL;
 
 	len --;
+
+	if (current == end)
+		current = NULL;
 
 	if (len == 0)
 		return end;
@@ -112,8 +122,14 @@ list_node *linked_list::remove (usize index)
 	if (index == 0)
 		return pop_start ();
 
+
 	len --;
-	list_node *temp = get (index);
+	list_node *temp = (*this)[index];
+
+	// ths node is not on the ends, so all pointers are valid
+	if (index <= current_i)
+		current = temp->next;
+
 
 	temp->prev->next = temp->next;
 	temp->next->prev = temp->prev;
@@ -127,6 +143,9 @@ void linked_list::remove_p (list_node *zone)
 		return;
 
 	len --;
+
+	if (current == zone)
+		current = NULL;
 
 	if (len == 0)
 		return;
@@ -147,13 +166,16 @@ void linked_list::remove_p (list_node *zone)
 	zone->next->prev = zone->prev;
 }
 
-list_node *linked_list::get (usize index)
+list_node *linked_list::operator[] (usize index)
 {
-	if (index > len)
+	if (index >= len)
 		return NULL;
 
 	if (current == NULL)
+	{
 		current = start;
+		current_i = 0;
+	}
 
 	isize diff_start = index;
 	isize diff_end = len - index - 1;
@@ -163,7 +185,7 @@ list_node *linked_list::get (usize index)
 	usize i;
 	i8 dir;
 
-	if (diff_middle < 0 && diff_start < diff_middle)
+	if (diff_middle < 0 && diff_start < abs (diff_middle))
 	{
 		zone = start;
 		i = 0;
@@ -192,6 +214,7 @@ list_node *linked_list::get (usize index)
 		if (zone == NULL)
 		{
 			error("zone should not be null")
+			return NULL;
 		}
 	}
 

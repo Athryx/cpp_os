@@ -87,7 +87,7 @@ void *mem::addr_space::realloc (void *mem, usize n)
 {
 	for (usize i = 0; i < virt_allocs.get_len (); i ++)
 	{
-		struct virt_allocation *allocation = (struct virt_allocation *) virt_allocs.get (i);
+		struct virt_allocation *allocation = (struct virt_allocation *) virt_allocs[i];
 		if (allocation->virt_addr == (usize) mem && allocation->type == alloc_type::valloc)
 		{
 			usize new_size = allocation->len;
@@ -112,13 +112,13 @@ void mem::addr_space::free (void *mem)
 {
 	for (usize i = 0; i < virt_allocs.get_len (); i ++)
 	{
-		struct virt_allocation *allocation = (struct virt_allocation *) virt_allocs.get (i);
+		struct virt_allocation *allocation = (struct virt_allocation *) virt_allocs[i];
 		if (allocation->virt_addr == (usize) mem && allocation->type == alloc_type::valloc)
 		{
 			// unmap virtual memory
 			for (usize j = 0; j < allocation->allocations.get_len (); j ++)
 			{
-				struct phys_allocation *temp = allocation->allocations.get (j);
+				struct phys_allocation *temp = allocation->allocations[j];
 				unmap_internal (temp->addr, temp->len);
 			}
 
@@ -201,7 +201,7 @@ void *mem::addr_space::unmap (usize virt_addr)
 {
 	for (usize i = 0; i < virt_allocs.get_len (); i ++)
 	{
-		struct phys_map *map = (struct phys_map *) virt_allocs.get (i);
+		struct phys_map *map = (struct phys_map *) virt_allocs[i];
 		if (map->virt_addr == virt_addr && map->type == alloc_type::map)
 		{
 			void *out = (void *) map->phys_addr;
@@ -265,7 +265,7 @@ void mem::addr_space::unreserve (usize virt_addr)
 {
 	for (usize i = 0; i < virt_allocs.get_len (); i ++)
 	{
-		struct phys_reserve *map = (struct phys_reserve *) virt_allocs.get (i);
+		struct phys_reserve *map = (struct phys_reserve *) virt_allocs[i];
 		if (map->virt_addr == virt_addr && map->type == alloc_type::reserve)
 		{
 			virt_allocs.remove (i);
@@ -281,8 +281,9 @@ void mem::addr_space::sync_tlb (usize virt_addr)
 
 	for (usize i = 0; i < virt_allocs.get_len (); i ++)
 	{
-		virt_zone *zone = (virt_zone *) virt_allocs.get (i);
-		sync_tlb_raw (zone->virt_addr, zone->len);
+		virt_zone *zone = (virt_zone *) virt_allocs[i];
+		if ((zone->type == alloc_type::valloc || zone->type == alloc_type::map) && zone->virt_addr == virt_addr)
+			sync_tlb_raw (zone->virt_addr, zone->len);
 	}
 }
 
@@ -309,7 +310,7 @@ void *mem::addr_space::map_alloc_data (struct virt_allocation *allocation)
 	usize i = 0;
 	for (; i < allocation->allocations.get_len (); i ++)
 	{
-		struct phys_allocation *zone = allocation->allocations.get (i);
+		struct phys_allocation *zone = allocation->allocations[i];
 
 		// this can fail if there is not enough physical memory for page tables
 		if (!map_internal (zone->addr, virt_addr_copy, zone->len, allocation->flags))
@@ -322,7 +323,7 @@ void *mem::addr_space::map_alloc_data (struct virt_allocation *allocation)
 			usize unmap_len = 0;
 			for (usize j = i - 1; j > 0; j --)
 			{
-				struct phys_allocation *zone2 = allocation->allocations.get (j);
+				struct phys_allocation *zone2 = allocation->allocations[j];
 				unmap_len += zone2->len;
 			}
 			unmap_internal (virt_addr, unmap_len);
@@ -337,27 +338,28 @@ void *mem::addr_space::map_alloc_data (struct virt_allocation *allocation)
 
 void *mem::addr_space::translate (usize virt_addr)
 {
-	usize *pml4_t = (usize *) canonical_addr ((pml4_table & PAGE_ADDR_POS) + kernel_vma);
+	// shouldn't need canonical_addr in all of these
+	usize *pml4_t = (usize *) ((pml4_table & PAGE_ADDR_POS) + kernel_vma);
 	usize pml4_i = get_bits (virt_addr, 39, 47);
 	if (!(pml4_t[pml4_i] & V_PRESENT))
 		return NULL;
 
-	usize *pdp_t = (usize *) canonical_addr ((pml4_t[pml4_i] & PAGE_ENTRIES) + kernel_vma);
+	usize *pdp_t = (usize *) ((pml4_t[pml4_i] & PAGE_ENTRIES) + kernel_vma);
 	usize pdp_i = get_bits (virt_addr, 30, 38);
 	if (!(pdp_t[pdp_i] & V_PRESENT))
 		return NULL;
 
-	usize *pd_t = (usize *) canonical_addr ((pdp_t[pdp_i] & PAGE_ENTRIES) + kernel_vma);
+	usize *pd_t = (usize *) ((pdp_t[pdp_i] & PAGE_ENTRIES) + kernel_vma);
 	usize pd_i = get_bits (virt_addr, 21, 29);
 	if (!(pd_t[pd_i] & V_PRESENT))
 		return NULL;
 
-	usize *page_t = (usize *) canonical_addr ((pd_t[pd_i] & PAGE_ENTRIES) + kernel_vma);
+	usize *page_t = (usize *) ((pd_t[pd_i] & PAGE_ENTRIES) + kernel_vma);
 	usize page_i = get_bits (virt_addr, 12, 20);
 	if (!(page_t[page_i] & V_PRESENT))
 		return NULL;
 
-	return (void *) canonical_addr ((page_t[page_i] & PAGE_ENTRIES) + kernel_vma);
+	return (void *) ((page_t[page_i] & PAGE_ENTRIES) + kernel_vma);
 }
 
 bool mem::addr_space::map_internal (usize phys_addr, usize virt_addr, usize n, usize flags)
@@ -399,14 +401,16 @@ bool mem::addr_space::map_internal_recurse (usize phys_addr, usize &virt_addr, u
 				if (temp == 0)
 					return false;
 
-				page_table_p = page_set (page_table, i, temp, flags);
+				page_table_p = page_set (page_table, i, temp - kernel_vma, flags);
 				page_counter_add (page_table[0], 1);
 			}
 			else
 			{
-				page_table_p = canonical_addr (page_table[i] & PAGE_ADDR_POS);
+				page_table_p = page_table[i] & PAGE_ADDR_POS;
 			}
 
+			// make sure address is in kernel physical form
+			page_table_p += kernel_vma;
 			bool temp_b = map_internal_recurse (phys_addr, virt_addr, start_page_n, page_n, page_level - 1, (usize *) page_table_p, flags);
 			if (!temp_b)
 				return false;
@@ -416,7 +420,7 @@ bool mem::addr_space::map_internal_recurse (usize phys_addr, usize &virt_addr, u
 			if (!(page_table[i] & V_PRESENT))
 				page_counter_add (page_table[0], 1);
 
-			page_set (page_table, i, phys_addr + PAGE_SIZE * (start_page_n - page_n), flags);
+			page_set (page_table, i, phys_addr + PAGE_SIZE * (start_page_n - page_n) - kernel_vma, flags);
 			page_n --;
 		}
 		i ++;
@@ -429,7 +433,7 @@ void mem::addr_space::unmap_internal (usize virt_addr, usize n)
 {
 	n = align_up (n, PAGE_SIZE) / PAGE_SIZE;
 	virt_addr &= PAGE_ADDR_POS;
-	unmap_internal_recurse (virt_addr, n, PAGE_LEVELS - 1, (usize *) canonical_addr (pml4_table & PAGE_ADDR_POS));
+	unmap_internal_recurse (virt_addr, n, PAGE_LEVELS - 1, (usize *) ((pml4_table & PAGE_ADDR_POS) + kernel_vma));
 }
 
 bool mem::addr_space::unmap_internal_recurse (usize &virt_addr, usize &page_n, usize page_level, usize *page_table)
@@ -461,7 +465,8 @@ bool mem::addr_space::unmap_internal_recurse (usize &virt_addr, usize &page_n, u
 			}
 			else if (unmap_internal_recurse (virt_addr, page_n, page_level - 1, (usize *) page_table[i]))
 			{
-				mem::free ((void *) (canonical_addr (page_table[i] & PAGE_ADDR_POS)));
+				// canonical addr shouldn't be needed
+				mem::free ((void *) ((page_table[i] & PAGE_ADDR_POS) + kernel_vma));
 				page_counter_add (page_table[0], -1);
 			}
 		}
@@ -501,7 +506,7 @@ bool mem::addr_space::insert_virt_zone (virt_zone &allocation)
 	for (usize i = 0; i < virt_allocs.get_len (); i ++)
 	{
 		last = current;
-		current = (virt_zone *) virt_allocs.get (i);
+		current = (virt_zone *) virt_allocs[i];
 
 		if (allocation.virt_addr >= current->virt_addr && allocation.virt_addr < current->virt_addr + current->len)
 			return false;
@@ -528,7 +533,7 @@ usize mem::addr_space::find_address (struct virt_zone &allocation)
 	usize i = virt_allocs.get_len ();
 
 	// case of zero is already handled
-	struct virt_zone *current = (struct virt_zone *) virt_allocs.get (i - 1);
+	struct virt_zone *current = (struct virt_zone *) virt_allocs[i - 1];
 	if (current->type != alloc_type::kernel)
 	{
 		error("Expected the end of virt_alloc list to have alloc_type kernel")
@@ -548,7 +553,7 @@ usize mem::addr_space::find_address (struct virt_zone &allocation)
 		for (; i >= 0; i --)
 		{
 			last = current;
-			current = (struct virt_zone *) virt_allocs.get (i);
+			current = (struct virt_zone *) virt_allocs[i];
 			usize current_end = current->virt_addr + current->len;
 			if ((last->virt_addr - current_end)  >= allocation.len)
 			{
@@ -581,7 +586,7 @@ usize mem::addr_space::get_free_space (usize virt_addr)
 	for (usize i = 0; i < virt_allocs.get_len (); i ++)
 	{
 		last = current;
-		current = (virt_zone *) virt_allocs.get (i);
+		current = (virt_zone *) virt_allocs[i];
 
 		if (virt_addr >= current->virt_addr && virt_addr < current->virt_addr + current->len)
 			return 0;
@@ -624,7 +629,7 @@ usize mem::addr_space::page_set (usize *page_table, u16 i, usize n, usize flags)
 			page_table[i] = n | flags | V_PRESENT;
 		}
 	}
-	return canonical_addr (n);
+	return n;
 }
 
 
@@ -632,7 +637,7 @@ mem::virt_allocation::~virt_allocation ()
 {
 	for (usize i = 0; i < allocations.get_len (); i ++)
 	{
-		struct phys_allocation* alloc = allocations.get (i);
+		struct phys_allocation* alloc = allocations[i];
 		mem::free ((void *) alloc->addr);
 	}
 	allocations.~array_list ();

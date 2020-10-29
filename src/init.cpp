@@ -25,9 +25,17 @@ static sched::registers *double_fault (struct int_data* data, error_code_t error
 	return NULL;
 }
 
+static sched::registers *gp_exception (struct int_data* data, error_code_t error_code, sched::registers *regs)
+{
+	//panic ("page fault");
+	kprintf ("general protection exception\n");
+	return NULL;
+}
+
 static sched::registers *page_fault (struct int_data* data, error_code_t error_code, sched::registers *regs)
 {
 	//panic ("page fault");
+	kprintf ("page fault\n");
 	return NULL;
 }
 
@@ -57,6 +65,7 @@ u8 init (void *mb2_table)
 
 	reg_int_handler (EXC_DOUBLE_FAULT, double_fault, int_handler_type::first);
 	reg_int_handler (EXC_PAGE_FAULT, page_fault, int_handler_type::normal);
+	reg_int_handler (EXC_GENERAL_PROTECTION_FAULT, page_fault, int_handler_type::normal);
 
 	// mem::init will move mb2_table
 	mb2_table = mem::init (mb2_table);

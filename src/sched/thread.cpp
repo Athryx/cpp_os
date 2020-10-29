@@ -43,7 +43,7 @@ static sched::registers *sched_time_handler (int_data *data, error_code_t error_
 
 	for (usize i = 0; i < t_list[T_SLEEP].get_len (); i ++)
 	{
-		sched::thread *temp = (sched::thread *) t_list[T_SLEEP].get (i);
+		sched::thread *temp = (sched::thread *) t_list[T_SLEEP][i];
 		if (temp->get_sleep_time () <= nsec)
 		{
 			// unblock will set state correctly
@@ -122,7 +122,7 @@ sched::registers *sched::schedule ()
 		return NULL;
 	}
 
-	while (t_list[T_DESTROY].get_len () != 0 && t_list[T_DESTROY].get (0) != thread_c)
+	while (t_list[T_DESTROY].get_len () != 0 && t_list[T_DESTROY][0] != thread_c)
 	{
 		thread *temp = (thread *) t_list[T_DESTROY].pop_start ();
 		// don't free the idle thread
