@@ -26,6 +26,8 @@ sched::process::~process ()
 		threads[i]->set_process_alive (false);
 		threads[i]->block (T_DESTROY);
 	}
+
+	proc_list->remove_p (this);
 }
 
 sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
@@ -80,13 +82,12 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 			return NULL;
 		}
 
-		memcpy (mem, (void *) (prgrm + p_hdr.p_offset), p_hdr.p_filesz);
+		memcpy ((void *) (((usize) mem) + p_hdr.p_vaddr % PAGE_SIZE), (void *) (prgrm + p_hdr.p_offset), p_hdr.p_filesz);
 
 		usize flags = 0;
 		flags |= (p_hdr.flags & ELF_EXEC ? 0 : V_XD);
 		flags |= (p_hdr.flags & ELF_WRITE ? V_WRITE : 0);
-
-		//usize flags = V_WRITE;
+		flags |= uid == 0 ? 0 : V_USER;
 
 		if (!out->addr_space.map_at ((usize) mem, p_hdr.p_vaddr, p_hdr.p_memsz, flags))
 		{

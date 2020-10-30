@@ -95,15 +95,19 @@ void *mem::addr_space::alloc (usize n, usize flags)
 
 void *mem::addr_space::realloc (void *mem, usize n)
 {
+	// make sure this is still needed in future
+	usize virt_addr = align_down ((usize) mem, PAGE_SIZE);
+	n = align_up (n, PAGE_SIZE);
+
 	for (usize i = 0; i < virt_allocs.get_len (); i ++)
 	{
 		struct virt_allocation *allocation = (struct virt_allocation *) virt_allocs[i];
-		if (allocation->virt_addr == (usize) mem && allocation->type == alloc_type::valloc)
+		if (allocation->virt_addr == virt_addr && allocation->type == alloc_type::valloc)
 		{
 			usize new_size = allocation->len;
 
 			if (new_size == n)
-				return mem;
+				return (void *) virt_addr;
 
 			if (new_size < n)
 			{
@@ -120,10 +124,12 @@ void *mem::addr_space::realloc (void *mem, usize n)
 
 void mem::addr_space::free (void *mem)
 {
+	usize virt_addr = align_down ((usize) mem, PAGE_SIZE);
+
 	for (usize i = 0; i < virt_allocs.get_len (); i ++)
 	{
 		struct virt_allocation *allocation = (struct virt_allocation *) virt_allocs[i];
-		if (allocation->virt_addr == (usize) mem && allocation->type == alloc_type::valloc)
+		if (allocation->virt_addr == virt_addr && allocation->type == alloc_type::valloc)
 		{
 			// unmap virtual memory
 			for (usize j = 0; j < allocation->allocations.get_len (); j ++)
@@ -147,6 +153,9 @@ void *mem::addr_space::map (usize phys_addr, usize n, usize flags)
 
 	if (!zone)
 		return NULL;
+
+	phys_addr = align_down (phys_addr, PAGE_SIZE);
+	n = align_up (n, PAGE_SIZE);
 
 	zone->phys_addr = phys_addr;
 	zone->len = n;
@@ -184,6 +193,10 @@ bool mem::addr_space::map_at (usize phys_addr, usize virt_addr, usize n, usize f
 	if (!zone)
 		return false;
 
+	phys_addr = align_down (phys_addr, PAGE_SIZE);
+	virt_addr = align_down (virt_addr, PAGE_SIZE);
+	n = align_up (n, PAGE_SIZE);
+
 	zone->phys_addr = phys_addr;
 	zone->len = n;
 	zone->virt_addr = virt_addr;
@@ -209,6 +222,8 @@ bool mem::addr_space::map_at (usize phys_addr, usize virt_addr, usize n, usize f
 
 void *mem::addr_space::unmap (usize virt_addr)
 {
+	virt_addr = align_down (virt_addr, PAGE_SIZE);
+
 	for (usize i = 0; i < virt_allocs.get_len (); i ++)
 	{
 		struct phys_map *map = (struct phys_map *) virt_allocs[i];
@@ -235,6 +250,8 @@ void *mem::addr_space::reserve (usize n)
 	if (!zone)
 		return NULL;
 
+	n = align_up (n, PAGE_SIZE);
+
 	zone->len = n;
 	usize virt_addr = find_address (*zone);
 
@@ -259,6 +276,9 @@ bool mem::addr_space::reserve_at (usize virt_addr, usize n)
 	if (!zone)
 		return false;
 
+	virt_addr = align_down (virt_addr, PAGE_SIZE);
+	n = align_up (n, PAGE_SIZE);
+
 	zone->virt_addr = virt_addr;
 	zone->len = n;
 
@@ -273,6 +293,8 @@ bool mem::addr_space::reserve_at (usize virt_addr, usize n)
 
 void mem::addr_space::unreserve (usize virt_addr)
 {
+	virt_addr = align_down (virt_addr, PAGE_SIZE);
+
 	for (usize i = 0; i < virt_allocs.get_len (); i ++)
 	{
 		struct phys_reserve *map = (struct phys_reserve *) virt_allocs[i];

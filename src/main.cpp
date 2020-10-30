@@ -129,6 +129,8 @@ void main_thread (void)
 	// will fail
 	process_new (userspace_thread, NULL);*/
 	kprintf ("didn't crash\n");
+	cli_safe ();
+	asm volatile ("int $32");
 }
 
 extern "C" [[ noreturn ]] void _start (void *mb2_table)
@@ -140,6 +142,7 @@ extern "C" [[ noreturn ]] void _start (void *mb2_table)
 	{
 		panic ("init failed");
 	}
+
 
 	auto *proc_elf = sched::process::load_elf ((void *) &initfs, (usize) &initfs_len, SUID);
 	//sched::thread thread (sched::proc_c (), main_thread);

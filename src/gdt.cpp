@@ -53,4 +53,6 @@ void gdt_init (void)
 	asm_load_gdt (&gdt_p);
 
 	asm_load_tss (0x28); // maybe wrong
+
+	load_data_segments (16);
 }

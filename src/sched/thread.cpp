@@ -29,11 +29,11 @@ static void unlock_all (void);
 extern "C" void int_sched (void);
 
 
-// FIXME: make interrupt actually set segment registers
 static sched::registers *sched_time_handler (int_data *data, error_code_t error_code, sched::registers *regs)
 {
 	sched::thread_c->regs = *regs;
 	sched::thread_c->regs.rip = data->rip;
+	sched::thread_c->regs.rsp = data->rsp;
 	sched::thread_c->regs.rflags = data->rflags;
 
 	u64 nsec = time_nsec_nolatch ();
@@ -64,6 +64,7 @@ static sched::registers *sched_time_handler (int_data *data, error_code_t error_
 	return NULL;
 }
 
+// FIXME: don't let this be called from userspace
 static sched::registers *sched_int_handler (int_data *data, error_code_t error_code, sched::registers *regs){
 	sched::thread_c->regs = *regs;
 	sched::thread_c->regs.rip = data->rip;
@@ -256,7 +257,8 @@ void sched::thread::init (thread_func_t func)
 
 	if (init_done)
 	{
-		stack_start = (usize) proc.addr_space.alloc (stack_size, V_WRITE | V_XD);
+		usize u_flag = proc.get_uid () ? V_USER : 0;
+		stack_start = (usize) proc.addr_space.alloc (stack_size, V_WRITE | V_XD | u_flag);
 		// this should maybe be done better in future
 		// FIXME: might break if bad timing, this needs to be locked
 		if (&proc_c ().addr_space == &proc.addr_space)

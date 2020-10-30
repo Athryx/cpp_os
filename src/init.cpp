@@ -29,6 +29,7 @@ static sched::registers *gp_exception (struct int_data* data, error_code_t error
 {
 	//panic ("page fault");
 	kprintf ("general protection exception\n");
+	panic ("");
 	return NULL;
 }
 
@@ -40,6 +41,7 @@ static sched::registers *page_fault (struct int_data* data, error_code_t error_c
 	else
 		kprintf ("page fault at kernel virtual address %x\n", get_cr2 ());
 
+	panic ("");
 	return NULL;
 }
 

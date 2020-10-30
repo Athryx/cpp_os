@@ -3,6 +3,7 @@ global asm_load_idt
 global asm_load_tss
 global rdmsr
 global wrmsr
+global load_data_segments
 global syscall_test
 
 bits 64
@@ -28,6 +29,14 @@ wrmsr:
 	mov rdx, rsi
 	shr rdx, 32
 	wrmsr
+	ret
+load_data_segments:
+	mov ax, di
+	mov ss, ax
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
 	ret
 syscall_test:
 	push rbx

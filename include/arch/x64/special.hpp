@@ -25,4 +25,6 @@ extern "C" void asm_load_tss (u16 tss_vector);
 extern "C" u64 rdmsr (u32 msr);
 extern "C" void wrmsr (u32 msr, u64 data);
 
+extern "C" void load_data_segments (u16 n);
+
 extern "C" void syscall_test (u32 syscall);
