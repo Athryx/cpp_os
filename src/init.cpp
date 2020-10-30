@@ -35,7 +35,11 @@ static sched::registers *gp_exception (struct int_data* data, error_code_t error
 static sched::registers *page_fault (struct int_data* data, error_code_t error_code, sched::registers *regs)
 {
 	//panic ("page fault");
-	kprintf ("page fault at virtual address %x\n", get_cr2 ());
+	if (error_code & PAGE_FAULT_USER)
+		kprintf ("page fault at user virtual address %x\n", get_cr2 ());
+	else
+		kprintf ("page fault at kernel virtual address %x\n", get_cr2 ());
+
 	return NULL;
 }
 

@@ -17,11 +17,11 @@ namespace sched
 			~process ();
 
 			// TODO: add dynamic linking
-			// FIXME: map kernel pages into process
+			// TODO: handler align in future
 			static process *load_elf (void *program, usize len, u8 uid);
 
+			thread *new_thread (thread_func_t func);
 			bool add_thread (thread &thr);
-			// FIXME: unsafe ins some scenarios
 			void rem_thread (thread &thr);
 
 			inline u8 get_uid () { return uid; }

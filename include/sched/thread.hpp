@@ -131,6 +131,8 @@ namespace sched
 
 			inline usize get_stack_size () { return stack_size; }
 
+			inline void set_process_alive (bool in) { process_alive = in; }
+
 
 			registers regs;
 
@@ -146,6 +148,8 @@ namespace sched
 			usize stack_size;
 
 			u64 sleep_time;
+
+			bool process_alive;
 	};
 
 	extern sched::thread *thread_c;

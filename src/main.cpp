@@ -12,6 +12,7 @@
 #include <mem/mem.hpp>
 #include <sched/process.hpp>
 #include <sched/thread.hpp>
+#include <sched/sched_def.hpp>
 
 
 using namespace mem;
@@ -40,8 +41,8 @@ extern char initfs[];
 
 void main_thread (void)
 {
+	cli_safe ();
 	kprintf ("initfs_len: %x\n", &initfs_len);
-	kprintf ("initfs: %s\n", initfs);
 	//test_thread ();
 	int *a = (int *) alloc (1);
 
@@ -130,12 +131,6 @@ void main_thread (void)
 	kprintf ("didn't crash\n");
 }
 
-__attribute__ ((naked))
-void t_thread ()
-{
-	hlt();
-}
-
 extern "C" [[ noreturn ]] void _start (void *mb2_table)
 {
 	// bochs magic breakpoint for debugging
@@ -146,7 +141,8 @@ extern "C" [[ noreturn ]] void _start (void *mb2_table)
 		panic ("init failed");
 	}
 
-	sched::thread thread (sched::proc_c (), main_thread);
+	auto *proc_elf = sched::process::load_elf ((void *) &initfs, (usize) &initfs_len, SUID);
+	//sched::thread thread (sched::proc_c (), main_thread);
 	//main_thread ();
 	// test
 	//kthread_new (thread_2);

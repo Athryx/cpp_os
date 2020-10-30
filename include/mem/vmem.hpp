@@ -81,10 +81,8 @@ namespace mem
 
 			// FIXME: handle case when there is not enough memory for pml4_table
 			addr_space ();
-			// TODO: finish
 			~addr_space ();
 
-			// TODO: support setting read, write, and execute permissions on pages
 			// allocates virtual memory zone and any underlying physical memory
 			// allocates at least n bytes
 			// uses same flags that alloc used on memory

@@ -14,4 +14,4 @@ typedef struct __attribute__((packed))
 
 void syscall_init (void);
 
-void *sys_realloc (syscall_vals_t *vals, u32 options, usize addr, usize orig, usize snew);
+void sys_hi (void);

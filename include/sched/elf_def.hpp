@@ -1,7 +1,12 @@
 #pragma once
 
 
+#ifdef x64
+// little endian magic number
+#define ELF_MAGIC 0x464c457f
+#else
 #define ELF_MAGIC 0x7f454c46
+#endif
 
 #define ELF_32_BIT 1
 #define ELF_64_BIT 2

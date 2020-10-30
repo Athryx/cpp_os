@@ -29,6 +29,16 @@ mem::addr_space::addr_space ()
 
 mem::addr_space::~addr_space ()
 {
+	for (usize i = 0; i < virt_allocs.get_len (); i ++)
+	{
+		virt_zone *zone = (virt_zone *) virt_allocs[i];
+		if (zone->type == alloc_type::valloc)
+			free ((void *) zone->virt_addr);
+		else if (zone->type == alloc_type::map)
+			unmap (zone->virt_addr);
+		else if (zone->type == alloc_type::reserve)
+			unreserve (zone->virt_addr);
+	}
 	mem::free ((void *) pml4_table);
 }
 

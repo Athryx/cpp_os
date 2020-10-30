@@ -1,4 +1,7 @@
-int main (int argc, char **argv)
+extern "C" void sys_hi ();
+
+int main (void)
 {
+	sys_hi ();
 	return 0;
 }

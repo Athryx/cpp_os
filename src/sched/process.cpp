@@ -21,9 +21,9 @@ sched::process::process (u8 uid)
 
 sched::process::~process ()
 {
-	// once thread_block is added, mark them to be deleted
 	for (usize i = 0; i < threads.get_len (); i ++)
 	{
+		threads[i]->set_process_alive (false);
 		threads[i]->block (T_DESTROY);
 	}
 }
@@ -43,7 +43,7 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 	#endif
 	// in future check the info data field
 
-	if (hdr->p_hdr < prgrm || hdr->p_hdr + hdr->p_hdr_n * hdr->p_hdr_entry_size)
+	if (hdr->p_hdr + hdr->p_hdr_n * hdr->p_hdr_entry_size > prgrm + len)
 	{
 		error("Program header list is not in elf memory region")
 		return NULL;
@@ -55,9 +55,6 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 		error("Could not create process object")
 		return NULL;
 	}
-
-	// TODO: this is probably very slow
-	// FIXME: set flags in kernel zone to only be superuser
 
 	elf::p_header *p_hdrs = (elf::p_header *) (prgrm + hdr->p_hdr);
 
@@ -89,6 +86,8 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 		flags |= (p_hdr.flags & ELF_EXEC ? 0 : V_XD);
 		flags |= (p_hdr.flags & ELF_WRITE ? V_WRITE : 0);
 
+		//usize flags = V_WRITE;
+
 		if (!out->addr_space.map_at ((usize) mem, p_hdr.p_vaddr, p_hdr.p_memsz, flags))
 		{
 			delete out;
@@ -97,19 +96,25 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 		}
 	}
 
-	thread *init_thread = new thread (*out, (thread_func_t) hdr->entry);
-	if (init_thread == NULL)
+	if (out->new_thread ((thread_func_t) hdr->entry) == NULL)
 	{
 		delete out;
 		error("Could not create first thread of new process")
 		return NULL;
 	}
 
-	if (!out->threads.append (init_thread))
+	return out;
+}
+
+sched::thread *sched::process::new_thread (thread_func_t func)
+{
+	thread *out = new thread (*this, func);
+	if (out == NULL)
+		return NULL;
+
+	if (!add_thread (*out))
 	{
-		delete init_thread;
 		delete out;
-		error("Could not append first thread of process to thread list")
 		return NULL;
 	}
 
@@ -131,6 +136,9 @@ void sched::process::rem_thread (thread &thr)
 			break;
 		}
 	}
+
+	if (threads.get_len () == 0)
+		delete this;
 }
 
 

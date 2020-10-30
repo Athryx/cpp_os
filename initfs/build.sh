@@ -15,7 +15,7 @@ ARC=$SRC/arch/$ARCH
 
 C_FILES="$SRC/main.c"
 
-ASM_FILES=""
+ASM_FILES="$ARC/hi.asm"
 
 OUT_FILE=initfs.bin
 
@@ -27,7 +27,7 @@ EXT=".o"
 
 COMP_FLAGS="-c -I$INCL/ -ffreestanding -fno-rtti -fno-exceptions -Wall -Wextra -mno-red-zone -mgeneral-regs-only -D $ARCH $G_DEF"
 ASM_FLAGS="-I$INCL/arch/$ARCH/ -f elf64 -F dwarf"
-LINK_FLAGS="-ffreestanding -nostdlib -lgcc -n"
+LINK_FLAGS="-ffreestanding -nostdlib -lgcc -n -T $LD_SCRIPT"
 
 for C_FILE in $C_FILES
 do

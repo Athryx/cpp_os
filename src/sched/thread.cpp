@@ -160,21 +160,27 @@ sched::registers *sched::schedule ()
 
 sched::thread::thread (process &proc, thread_func_t func)
 : proc (proc),
-stack_size (STACK_INITIAL_SIZE)
+stack_size (STACK_INITIAL_SIZE),
+process_alive (true)
 {
 	init (func);
 }
 
 sched::thread::thread (process &proc, thread_func_t func, usize stack_size)
 : proc (proc),
-stack_size (stack_size)
+stack_size (stack_size),
+process_alive (true)
 {
 	init (func);
 }
 
 sched::thread::~thread ()
 {
-	proc.addr_space.free ((void *) stack_start);
+	if (process_alive)
+	{
+		proc.addr_space.free ((void *) stack_start);
+		proc.add_thread (*this);
+	}
 }
 
 void sched::thread::block (u8 state)

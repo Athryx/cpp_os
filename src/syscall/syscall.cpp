@@ -8,7 +8,7 @@
 //typedef usize (*syscall_func_t) (usize, usize, usize, usize, usize, usize, u32);
 
 
-void *syscalls[8];
+void *syscalls[16] = { (void *) sys_hi };
 
 
 void syscall_init (void);
@@ -30,4 +30,9 @@ void syscall_init (void)
 
 	// load correct cs and ss values after syscall and sysret
 	wrmsr (STAR_MSR, 0x0013000800000000);
+}
+
+void sys_hi (void)
+{
+	kprintf ("hi userspace!\n");
 }
