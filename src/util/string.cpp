@@ -9,8 +9,8 @@ int strcmp (const char *__restrict__ str1, const char *__restrict__ str2);
 int strncmp (const char *__restrict__ str1, const char *__restrict__ str2, usize n);
 void revstr (char *__restrict__ str);
 u32 atoi (const char *__restrict__ str);
-void itoa (char *__restrict__ str_out, u32 num);
-void itoa_hex (char *__restrict__ str_out, u32 num);
+void itoa (char *__restrict__ str_out, u64 num);
+void itoa_hex (char *__restrict__ str_out, u64 num);
 char itoc (u32 num);
 
 
@@ -136,7 +136,7 @@ void itoa (char *__restrict__ str_out, u64 num)
 	usize out_i = 0;
 	// set to true on first nonzero digit
 	bool flag = false;
-	for (i32 i = 20; i >= 0; i --)
+	for (i8 i = 20; i >= 0; i --)
 	{
 		usize n1 = powu (10, i);
 		usize n2 = num / n1;
@@ -164,14 +164,14 @@ void itoa (char *__restrict__ str_out, u64 num)
 	str_out[out_i] = '\0';
 }
 
-void itoa_hex (char *__restrict__ str_out, u32 num)
+void itoa_hex (char *__restrict__ str_out, u64 num)
 {
-	for (i8 i = 7; i >= 0 ; i --)
+	for (i8 i = 15; i >= 0 ; i --)
 	{
 		str_out[i] = itoc (num % 16);
 		num >>= 4;
 	}
-	str_out[8] = '\0';
+	str_out[16] = '\0';
 }
 
 char itoc (u32 num)

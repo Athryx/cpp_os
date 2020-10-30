@@ -16,6 +16,9 @@
 #define V_GLOBAL ((usize) 1 << 7)
 #define V_XD ((usize) 1 << 63)
 
+// FIXME: this might cause problems with V_USER
+#define V_ALL_PERMISSIONS (V_WRITE | V_USER)
+
 
 namespace mem
 {

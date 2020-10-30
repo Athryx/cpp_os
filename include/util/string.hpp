@@ -23,7 +23,7 @@ u32 atoi (const char *__restrict__ str);
 // TODO: make one for negative numbers
 void itoa (char *__restrict__ str_out, u64 num);
 // str_out must be at least 9 bytes, otherwise problems could occur
-void itoa_hex (char *__restrict__ str_out, u32 num);
+void itoa_hex (char *__restrict__ str_out, u64 num);
 
 // hex number in
 char itoc (u32 num);

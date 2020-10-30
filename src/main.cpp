@@ -143,11 +143,8 @@ extern "C" [[ noreturn ]] void _start (void *mb2_table)
 		panic ("init failed");
 	}
 
-	kprintf ("%u", 23497643755);
-
-
-	//auto *proc_elf = sched::process::load_elf ((void *) &initfs, (usize) &initfs_len, SUID);
-	sched::thread thread (sched::proc_c (), main_thread);
+	auto *proc_elf = sched::process::load_elf ((void *) &initfs, (usize) &initfs_len, SUID);
+	//sched::thread thread (sched::proc_c (), main_thread);
 	//main_thread ();
 	// test
 	//kthread_new (thread_2);
@@ -158,7 +155,7 @@ extern "C" [[ noreturn ]] void _start (void *mb2_table)
 	kprintf ("epoch v0.0.1\n");
 
 	// add extra space on rsp incase an interupt occurs at a very unlucky time in sti_safe
-	global::sys_rsp[CPU_I] = align_up (get_rsp () + 0x40, 16);
+	global::sys_rsp[CPU_I] = align_up (get_rsp () + 0x100, 16);
 	tss.rsp0 = global::sys_rsp[CPU_I];
 
 	sti_safe ();

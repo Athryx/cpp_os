@@ -36,6 +36,8 @@ static sched::registers *sched_time_handler (int_data *data, error_code_t error_
 	sched::thread_c->regs.rip = data->rip;
 	sched::thread_c->regs.rsp = data->rsp;
 	sched::thread_c->regs.rflags = data->rflags;
+	sched::thread_c->regs.cs = data->cs;
+	sched::thread_c->regs.ds = data->ss;
 
 	u64 nsec = time_nsec_nolatch ();
 
@@ -66,7 +68,8 @@ static sched::registers *sched_time_handler (int_data *data, error_code_t error_
 }
 
 // FIXME: don't let this be called from userspace
-static sched::registers *sched_int_handler (int_data *data, error_code_t error_code, sched::registers *regs){
+static sched::registers *sched_int_handler (int_data *data, error_code_t error_code, sched::registers *regs)
+{
 	// interrupt was called from userspace
 	if (data->cs & 0b11)
 		return NULL;
@@ -75,6 +78,8 @@ static sched::registers *sched_int_handler (int_data *data, error_code_t error_c
 	sched::thread_c->regs.rip = data->rip;
 	sched::thread_c->regs.rsp = data->rsp;
 	sched::thread_c->regs.rflags = data->rflags;
+	sched::thread_c->regs.cs = data->cs;
+	sched::thread_c->regs.ds = data->ss;
 
 	lock ();
 	auto *out = sched::schedule ();
@@ -264,7 +269,7 @@ void sched::thread::init (thread_func_t func)
 	if (init_done)
 	{
 		usize u_flag = proc.get_uid () ? V_USER : 0;
-		stack_start = (usize) proc.addr_space.alloc (stack_size, V_WRITE | V_XD | u_flag);
+		stack_start = (usize) proc.addr_space.alloc (stack_size, V_XD | V_WRITE | u_flag);
 		// this should maybe be done better in future
 		// FIXME: might break if bad timing, this needs to be locked
 		if (&proc_c ().addr_space == &proc.addr_space)

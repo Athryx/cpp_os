@@ -34,10 +34,16 @@ static sched::registers *gp_exception (struct int_data* data, error_code_t error
 
 static sched::registers *page_fault (struct int_data* data, error_code_t error_code, sched::registers *regs)
 {
-	if (error_code & PAGE_FAULT_USER)
-		panic ("page fault at user virtual address %x\n", get_cr2 ());
-	else
-		panic ("page fault at kernel virtual address %x\n", get_cr2 ());
+	panic ("page fault accessing virtual address %x\n"
+			"page fault during %s %s\n"
+			"rip: %x\nrsp: %x\n"
+			"non present page: %u\n"
+			"reserved bit set: %u\n",
+			get_cr2 (),
+			(error_code & PAGE_FAULT_USER) ? "user" : "kernel",
+			(error_code & PAGE_FAULT_EXECUTE) ? "instruction fetch" : ((error_code & PAGE_FAULT_WRITE) ? "write" : "read"),
+			data->rip, data->rsp,
+			!(error_code & PAGE_FAULT_PROTECTION), (error_code & PAGE_FAULT_RESERVED) != 0);
 	return NULL;
 }
 

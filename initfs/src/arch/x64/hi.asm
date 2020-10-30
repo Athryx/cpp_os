@@ -5,6 +5,6 @@ bits 64
 sys_hi:
 	push rbx
 	mov rsi, 0
-	syscall
+	o64 syscall
 	pop rbx
 	ret

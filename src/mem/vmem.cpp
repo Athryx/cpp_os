@@ -433,7 +433,7 @@ bool mem::addr_space::map_internal_recurse (usize phys_addr, usize &virt_addr, u
 				if (temp == 0)
 					return false;
 
-				page_table_p = page_set (page_table, i, temp - kernel_vma, flags);
+				page_table_p = page_set (page_table, i, temp - kernel_vma, V_ALL_PERMISSIONS);
 				page_counter_add (page_table[0], 1);
 			}
 			else
