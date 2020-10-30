@@ -144,8 +144,8 @@ extern "C" [[ noreturn ]] void _start (void *mb2_table)
 	}
 
 
-	auto *proc_elf = sched::process::load_elf ((void *) &initfs, (usize) &initfs_len, SUID);
-	//sched::thread thread (sched::proc_c (), main_thread);
+	//auto *proc_elf = sched::process::load_elf ((void *) &initfs, (usize) &initfs_len, SUID);
+	sched::thread thread (sched::proc_c (), main_thread);
 	//main_thread ();
 	// test
 	//kthread_new (thread_2);

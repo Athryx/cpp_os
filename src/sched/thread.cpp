@@ -66,8 +66,13 @@ static sched::registers *sched_time_handler (int_data *data, error_code_t error_
 
 // FIXME: don't let this be called from userspace
 static sched::registers *sched_int_handler (int_data *data, error_code_t error_code, sched::registers *regs){
+	// interrupt was called from userspace
+	if (data->cs & 0b11)
+		return NULL;
+
 	sched::thread_c->regs = *regs;
 	sched::thread_c->regs.rip = data->rip;
+	sched::thread_c->regs.rsp = data->rsp;
 	sched::thread_c->regs.rflags = data->rflags;
 
 	lock ();

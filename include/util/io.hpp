@@ -3,7 +3,6 @@
 
 #include <types.hpp>
 #include <stdarg.h>
-#include <util/string.hpp>
 #include <driver/tty.hpp>
 #include <def/keys.hpp>
 #include <arch/x64/common.hpp>
@@ -25,8 +24,13 @@ if ((obj) == NULL)	\
 	return 0;	\
 }
 
-#define error(error_message)	\
-kprinte ("%CERROR%C: %s at %s:%x:\n%s\n",VGAC_RED, VGAC_WHITE, __func__, __FILE__, __LINE__, error_message);
+#define error(fmt, ...)	\
+do			\
+{			\
+kprinte ("%CERROR%C: %s at %s:%x:\n",VGAC_RED, VGAC_WHITE, __func__, __FILE__, __LINE__);	\
+kprinte (fmt, ##__VA_ARGS__);	\
+while (0);
+// semicolon needed for backward compatability
 
 #define debug_c(n)		\
 do				\
@@ -47,10 +51,10 @@ do				\
 #define debug_c(n)
 #endif
 
-
 /* only supported formats for format strings are:
 %s
 %x
+%c
 */
 void kprintf (const char *__restrict__ format, ...);
 void kprinte (const char *__restrict__ format, ...);

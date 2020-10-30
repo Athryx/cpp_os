@@ -2,6 +2,7 @@
 #include <types.hpp>
 #include <def/keys.hpp>
 #include <arch/x64/common.hpp>
+#include <util/string.hpp>
 
 
 void kprintf (const char *__restrict__ format, ...)
