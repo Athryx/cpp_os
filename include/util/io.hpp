@@ -54,4 +54,6 @@ do				\
 */
 void kprintf (const char *__restrict__ format, ...);
 void kprinte (const char *__restrict__ format, ...);
-[[ noreturn ]] void panic (const char *__restrict__ message);
+// TODO: maybe pass va_list by reference
+void kvprintf (const char *__restrict__ format, va_list list);
+[[ noreturn ]] void panic (const char *__restrict__ format, ...);

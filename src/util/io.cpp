@@ -4,53 +4,11 @@
 #include <arch/x64/common.hpp>
 
 
-void kprintf (const char *__restrict__ format, ...);
-[[ noreturn ]] void panic (const char *__restrict__ message);
-
-
 void kprintf (const char *__restrict__ format, ...)
 {
 	va_list list;
 	va_start(list, format);
-
-	usize len = strlen (format);
-	for (usize i = 0; i < len; i ++)
-	{
-		if (format[i] == '%')
-		{
-			i ++;
-			char buf[32];
-			switch (format[i])
-			{
-				case 'u':
-					va_arg (list, u32);
-					break;
-				case 'x':
-					itoa_hex (buf, va_arg (list, u32));
-					vga_append ("0x");
-					vga_append (buf);
-					break;
-				case 's':
-					vga_append (va_arg (list, char *));
-					break;
-				case 'c':
-					vga_putc (va_arg (list, int));
-					break;
-				case 'C':
-					buf[0] = TTY_SET_COLOR;
-					buf[1] = (char) va_arg (list, int);
-					buf[2] = '\0';
-					vga_append (buf);
-					break;
-				default:
-					i ++;
-			}
-		}
-		else
-		{
-			vga_putc (format[i]);
-		}
-	}
+	kvprintf (format, list);
 	va_end (list);
 }
 
@@ -59,7 +17,12 @@ void kprinte (const char *__restrict__ format, ...)
 {
 	va_list list;
 	va_start(list, format);
+	kvprintf (format, list);
+	va_end (list);
+}
 
+void kvprintf (const char *__restrict__ format, va_list list)
+{
 	usize len = strlen (format);
 	for (usize i = 0; i < len; i ++)
 	{
@@ -98,12 +61,16 @@ void kprinte (const char *__restrict__ format, ...)
 			vga_putc (format[i]);
 		}
 	}
-	va_end (list);
 }
 
-[[ noreturn ]] void panic (const char *__restrict__ message)
+[[ noreturn ]] void panic (const char *__restrict__ format, ...)
 {
-	kprintf ("PANIC: %s", message);
+	kprintf ("%CPANIC:%C ", VGAC_RED, VGAC_WHITE);
+
+	va_list list;
+	va_start(list, format);
+	kvprintf (format, list);
+	va_end (list);
 
 	cli();
 	for (;;)
