@@ -3,7 +3,8 @@
 #include <util/misc.hpp>
 
 
-int powi (const int a, const int b);
+isize powi (const isize a, const usize b);
+usize powu (const usize a, const usize b);
 u8 log2_up (u64 in);
 int wrap (const int in, const int lower, const int upper);
 int clamp (const int in, const int lower, const int upper);
@@ -11,10 +12,20 @@ i32 abs (i32 in);
 i8 sign (i32 in);
 
 
-int powi (const int a, const int b)
+isize powi (const isize a, const usize b)
 {
-	int out = 1;
-	for (int i = 0; i < b; i ++)
+	isize out = 1;
+	for (usize i = 0; i < b; i ++)
+	{
+		out *= a;
+	}
+	return out;
+}
+
+usize powu (const usize a, const usize b)
+{
+	isize out = 1;
+	for (usize i = 0; i < b; i ++)
 	{
 		out *= a;
 	}

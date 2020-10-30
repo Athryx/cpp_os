@@ -9,3 +9,5 @@ make initfs build script work with crtbegin.o and crtend.o
 
 current:
 make map_kernel method which uses big pages
+
+make sure not to rely on exported headers

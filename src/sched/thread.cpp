@@ -4,6 +4,7 @@
 #include <sched/sched_def.hpp>
 #include <int.hpp>
 #include <util/time.hpp>
+#include <util/math.hpp>
 #include <util/linked_list.hpp>
 #include <arch/x64/common.hpp>
 

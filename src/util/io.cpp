@@ -34,7 +34,8 @@ void kvprintf (const char *__restrict__ format, va_list list)
 			switch (format[i])
 			{
 				case 'u':
-					va_arg (list, u32);
+					itoa (buf, va_arg (list, u64));
+					vga_append (buf);
 					break;
 				case 'x':
 					itoa_hex (buf, va_arg (list, u32));

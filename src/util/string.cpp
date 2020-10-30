@@ -128,9 +128,40 @@ u32 atoi (const char *__restrict__ str)
 	return out;
 }
 
-void itoa (char *__restrict__ str_out, u32 num)
+// usize max number requires 20 digits, 1 null byte to store
+// start power at 10^20
+void itoa (char *__restrict__ str_out, u64 num)
 {
+	// output len
+	usize out_i = 0;
+	// set to true on first nonzero digit
+	bool flag = false;
+	for (i32 i = 20; i >= 0; i --)
+	{
+		usize n1 = powu (10, i);
+		usize n2 = num / n1;
 
+		if (n2)
+		{
+			flag = true;
+			str_out[out_i] = itoc (n2);
+			out_i ++;
+			num -= n1 * n2;
+		}
+		else if (flag)
+		{
+			str_out[out_i] = '0';
+			out_i ++;
+		}
+	}
+
+	if (out_i == 0)
+	{
+		str_out[out_i] = '0';
+		out_i ++;
+	}
+
+	str_out[out_i] = '\0';
 }
 
 void itoa_hex (char *__restrict__ str_out, u32 num)

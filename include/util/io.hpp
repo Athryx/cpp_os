@@ -12,14 +12,14 @@
 #define assert(expr)	\
 if (!(expr))		\
 {			\
-	kprinte ("%CERROR%C: %s at %s:%x:\nassertion \"%s\" failed\n", VGAC_RED, VGAC_WHITE, __func__, __FILE__, __LINE__, #expr);	\
+	kprinte ("%CERROR%C: %s at %s:%u:\nassertion \"%s\" failed\n", VGAC_RED, VGAC_WHITE, __func__, __FILE__, __LINE__, #expr);	\
 	return 0;	\
 }
 
 #define massert(obj)	\
 if ((obj) == NULL)	\
 {			\
-	kprinte ("%CERROR%C: %s at %s:%x:\nobject \"%s\" is null\n", VGAC_RED, VGAC_WHITE, __func__, __FILE__, __LINE__, #obj);	\
+	kprinte ("%CERROR%C: %s at %s:%u:\nobject \"%s\" is null\n", VGAC_RED, VGAC_WHITE, __func__, __FILE__, __LINE__, #obj);	\
 	delete (obj);	\
 	return 0;	\
 }
@@ -27,8 +27,9 @@ if ((obj) == NULL)	\
 #define error(fmt, ...)	\
 do			\
 {			\
-kprinte ("%CERROR%C: %s at %s:%x:\n",VGAC_RED, VGAC_WHITE, __func__, __FILE__, __LINE__);	\
+kprinte ("%CERROR%C: %s at %s:%u:\n",VGAC_RED, VGAC_WHITE, __func__, __FILE__, __LINE__);	\
 kprinte (fmt, ##__VA_ARGS__);	\
+}			\
 while (0);
 // semicolon needed for backward compatability
 

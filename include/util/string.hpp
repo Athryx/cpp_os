@@ -19,7 +19,9 @@ void revstr (char *__restrict__ str);
 // atoi and itoa don't work with negative numbers yet
 u32 atoi (const char *__restrict__ str);
 // str_out must be at least 11 bytes, otherwise problems could occur
-void itoa (char *__restrict__ str_out, u32 num);
+// could be oprimised, but it doesn't really matter
+// TODO: make one for negative numbers
+void itoa (char *__restrict__ str_out, u64 num);
 // str_out must be at least 9 bytes, otherwise problems could occur
 void itoa_hex (char *__restrict__ str_out, u32 num);
 

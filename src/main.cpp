@@ -143,6 +143,8 @@ extern "C" [[ noreturn ]] void _start (void *mb2_table)
 		panic ("init failed");
 	}
 
+	kprintf ("%u", 23497643755);
+
 
 	//auto *proc_elf = sched::process::load_elf ((void *) &initfs, (usize) &initfs_len, SUID);
 	sched::thread thread (sched::proc_c (), main_thread);

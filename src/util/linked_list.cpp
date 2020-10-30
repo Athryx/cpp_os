@@ -1,6 +1,7 @@
 #include <util/linked_list.hpp>
 #include <types.hpp>
 #include <util/io.hpp>
+#include <util/math.hpp>
 
 
 using namespace util;

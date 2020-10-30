@@ -17,7 +17,8 @@
 })
 
 
-int powi (const int a, const int b);
+isize powi (const isize a, const usize b);
+usize powu (const usize a, const usize b);
 extern "C" u8 log2 (u64 in);
 u8 log2_up (u64 in);
 int wrap (const int in, const int lower, const int upper);

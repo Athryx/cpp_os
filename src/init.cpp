@@ -12,6 +12,7 @@
 #include <mem/kmem.hpp>
 #include <sched/process.hpp>
 #include <sched/thread.hpp>
+#include <util/string.hpp>
 
 
 static void double_fault (struct int_data* data, error_code_t error_code);
