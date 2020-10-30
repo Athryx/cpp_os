@@ -27,6 +27,7 @@ enum vga_color
 };
 
 
+// if want to keep background black, you can just pass vga_color enum directly to vga_append
 color_t vga_form_color (enum vga_color back_c, enum vga_color text_c);
 void vga_clear (void);
 void vga_putc (char in);

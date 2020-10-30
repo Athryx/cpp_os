@@ -6,8 +6,6 @@ global inb
 global inw
 global ind
 
-global int_1
-
 global io_wait
 
 global get_rsp
@@ -47,9 +45,22 @@ ind:
 	in eax, dx
 	ret
 
-int_1:
-	int 1
+%macro cr_funcs 1
+global get_cr %+ %1
+get_cr %+ %1 %+ :
+	mov rax, cr %+ %1
 	ret
+
+global set_cr %+ %1
+set_cr %+ %1 %+ :
+	mov cr %+ %1, rdi
+	ret
+%endmacro
+
+cr_funcs 0
+cr_funcs 2
+cr_funcs 3
+cr_funcs 4
 
 ; from osdev wiki, makes cpu wait for a bit
 io_wait:

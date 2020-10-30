@@ -27,7 +27,6 @@ static void lock_all (void);
 static void unlock_all (void);
 
 extern "C" void int_sched (void);
-extern "C" void load_cr3 (usize cr3);
 
 
 // FIXME: make interrupt actually set segment registers
@@ -150,7 +149,7 @@ sched::registers *sched::schedule ()
 		thread_c->state = T_RUNNING;
 
 		if (&proc_c () != &proc_c_save)
-			load_cr3 (proc_c ().addr_space.get_cr3 ());
+			set_cr3 (proc_c ().addr_space.get_cr3 ());
 
 		return &thread_c->regs;
 	}
@@ -257,7 +256,7 @@ void sched::thread::init (thread_func_t func)
 		if (&proc_c ().addr_space == &proc.addr_space)
 			proc.addr_space.sync_tlb (stack_start);
 
-		regs.rsp = stack_start + stack_size - 8;
+		regs.rsp = stack_start + stack_size;
 		regs.rip = (usize) func;
 
 		t_list[T_READY].append (this);

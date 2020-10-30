@@ -19,12 +19,26 @@ extern "C" u8 inb (u16 port);
 extern "C" u16 inw (u16 port);
 extern "C" u32 ind (u16 port);
 
-extern "C" void int_1 (void);
-
 // wait for a bit
 extern "C" void io_wait (void);
 
 extern "C" usize get_rsp (void);
+
+// TODO: move these to special
+// cr8 has some things as well, but it doesn't sound very useful
+// cpu control flags
+extern "C" usize get_cr0 (void);
+// page fault linear address
+extern "C" usize get_cr2 (void);
+// pml4 table pointer
+extern "C" usize get_cr3 (void);
+// more cpu control flags
+extern "C" usize get_cr4 (void);
+
+extern "C" void set_cr0 (usize val);
+extern "C" void set_cr2 (usize val);
+extern "C" void set_cr3 (usize val);
+extern "C" void set_cr4 (usize val);
 
 void sti_safe (void);
 void cli_safe (void);

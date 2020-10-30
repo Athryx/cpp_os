@@ -12,6 +12,9 @@
 #define RSTAR_MSR 0xc0000083
 #define FMASK_MSR 0xc0000084
 
+// allows execute disable in pages
+#define EFER_NXE (1 << 11)
+
 
 extern "C" void asm_load_gdt (struct gdt_pointer *pointer);
 

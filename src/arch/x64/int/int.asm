@@ -35,39 +35,45 @@ int_handler_ %+ %1 %+ :
 	mov rdx, rsp
 	mov rax, c_int_handler_ %+ %1
 	call rax
+	; save return value because ax is needed to load segment registers
+	mov r14, rax
 
-	cmp rax, 0
+	cmp r14, 0
 	je .restore
 
 	; set registers according to output
-	mov rcx, [rax + registers.rsp]
-	mov [r15 + int_data.rsp], rcx
-	mov rcx, [rax + registers.rip]
-	mov [r15 + int_data.rip], rcx
-	mov rcx, [rax + registers.rflags]
-	mov [r15 + int_data.rflags], rcx
+	mov rax, [r14 + registers.rsp]
+	mov [r15 + int_data.rsp], rax
+	mov rax, [r14 + registers.rip]
+	mov [r15 + int_data.rip], rax
+	mov rax, [r14 + registers.rflags]
+	mov [r15 + int_data.rflags], rax
 
-	mov rcx, 0
-	mov cx, [rax + registers.ds]
-	mov qword [r15 + int_data.ss], rcx
-	mov cx, [rax + registers.cs]
-	mov qword [r15 + int_data.cs], rcx
+	mov rax, 0
+	mov ax, [r14 + registers.ds]
+	mov qword [r15 + int_data.ss], rax
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ax, [r14 + registers.cs]
+	mov qword [r15 + int_data.cs], rax
 
-	mov rbx, [rax + registers.rbx]
-	mov rcx, [rax + registers.rcx]
-	mov rdx, [rax + registers.rdx]
-	mov rbp, [rax + registers.rbp]
-	mov rdi, [rax + registers.rdi]
-	mov rsi, [rax + registers.rsi]
-	mov r8, [rax + registers.r8]
-	mov r9, [rax + registers.r9]
-	mov r10, [rax + registers.r10]
-	mov r11, [rax + registers.r11]
-	mov r12, [rax + registers.r12]
-	mov r13, [rax + registers.r13]
-	mov r14, [rax + registers.r14]
-	mov r15, [rax + registers.r15]
-	mov rax, [rax + registers.rax]
+	mov rax, [r14 + registers.rax]
+	mov rbx, [r14 + registers.rbx]
+	mov rcx, [r14 + registers.rcx]
+	mov rdx, [r14 + registers.rdx]
+	mov rbp, [r14 + registers.rbp]
+	mov rdi, [r14 + registers.rdi]
+	mov rsi, [r14 + registers.rsi]
+	mov r8, [r14 + registers.r8]
+	mov r9, [r14 + registers.r9]
+	mov r10, [r14 + registers.r10]
+	mov r11, [r14 + registers.r11]
+	mov r12, [r14 + registers.r12]
+	mov r13, [r14 + registers.r13]
+	mov r15, [r14 + registers.r15]
+	mov r14, [r14 + registers.r14]
 
 	add rsp, registers_size
 	iretq
@@ -125,39 +131,45 @@ int_handler_ %+ %1 %+ :
 	mov rdx, rsp
 	mov rax, c_int_handler_ %+ %1
 	call rax
+	; save return value because ax is needed to load segment registers
+	mov r14, rax
 
-	cmp rax, 0
+	cmp r14, 0
 	je .restore
 
 	; set registers according to output
-	mov rcx, [rax + registers.rsp]
-	mov [r15 + int_data.rsp], rcx
-	mov rcx, [rax + registers.rip]
-	mov [r15 + int_data.rip], rcx
-	mov rcx, [rax + registers.rflags]
-	mov [r15 + int_data.rflags], rcx
+	mov rax, [r14 + registers.rsp]
+	mov [r15 + int_data.rsp], rax
+	mov rax, [r14 + registers.rip]
+	mov [r15 + int_data.rip], rax
+	mov rax, [r14 + registers.rflags]
+	mov [r15 + int_data.rflags], rax
 
-	mov rcx, 0
-	mov cx, [rax + registers.ds]
-	mov qword [r15 + int_data.ss], rcx
-	mov cx, [rax + registers.cs]
-	mov qword [r15 + int_data.cs], rcx
+	mov rax, 0
+	mov ax, [r14 + registers.ds]
+	mov qword [r15 + int_data.ss], rax
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ax, [r14 + registers.cs]
+	mov qword [r15 + int_data.cs], rax
 
-	mov rbx, [rax + registers.rbx]
-	mov rcx, [rax + registers.rcx]
-	mov rdx, [rax + registers.rdx]
-	mov rbp, [rax + registers.rbp]
-	mov rdi, [rax + registers.rdi]
-	mov rsi, [rax + registers.rsi]
-	mov r8, [rax + registers.r8]
-	mov r9, [rax + registers.r9]
-	mov r10, [rax + registers.r10]
-	mov r11, [rax + registers.r11]
-	mov r12, [rax + registers.r12]
-	mov r13, [rax + registers.r13]
-	mov r14, [rax + registers.r14]
-	mov r15, [rax + registers.r15]
-	mov rax, [rax + registers.rax]
+	mov rax, [r14 + registers.rax]
+	mov rbx, [r14 + registers.rbx]
+	mov rcx, [r14 + registers.rcx]
+	mov rdx, [r14 + registers.rdx]
+	mov rbp, [r14 + registers.rbp]
+	mov rdi, [r14 + registers.rdi]
+	mov rsi, [r14 + registers.rsi]
+	mov r8, [r14 + registers.r8]
+	mov r9, [r14 + registers.r9]
+	mov r10, [r14 + registers.r10]
+	mov r11, [r14 + registers.r11]
+	mov r12, [r14 + registers.r12]
+	mov r13, [r14 + registers.r13]
+	mov r15, [r14 + registers.r15]
+	mov r14, [r14 + registers.r14]
 
 	add rsp, registers_size
 	; not sure if needed
@@ -227,18 +239,22 @@ int_handler_ %+ %1 %+ :
 	je .restore
 
 	; set registers according to output
-	mov rcx, [r14 + registers.rsp]
-	mov [r15 + int_data.rsp], rcx
-	mov rcx, [r14 + registers.rip]
-	mov [r15 + int_data.rip], rcx
-	mov rcx, [r14 + registers.rflags]
-	mov [r15 + int_data.rflags], rcx
+	mov rax, [r14 + registers.rsp]
+	mov [r15 + int_data.rsp], rax
+	mov rax, [r14 + registers.rip]
+	mov [r15 + int_data.rip], rax
+	mov rax, [r14 + registers.rflags]
+	mov [r15 + int_data.rflags], rax
 
-	mov rcx, 0
-	mov cx, [rax + registers.ds]
-	mov qword [r15 + int_data.ss], rcx
-	mov cx, [rax + registers.cs]
-	mov qword [r15 + int_data.cs], rcx
+	mov rax, 0
+	mov ax, [r14 + registers.ds]
+	mov qword [r15 + int_data.ss], rax
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ax, [r14 + registers.cs]
+	mov qword [r15 + int_data.cs], rax
 
 	mov rax, [r14 + registers.rax]
 	mov rbx, [r14 + registers.rbx]

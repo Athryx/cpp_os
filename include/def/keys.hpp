@@ -3,7 +3,7 @@
 
 // followed by color byte
 #define TTY_SET_COLOR 0x01
-// fo;;owed by column, row byte
+// followed by column, row byte
 #define TTY_SET_POSITION 0x02
 
 #define ARROW_LEFT 0x11

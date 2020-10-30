@@ -148,6 +148,7 @@ namespace mem
 
 			#ifdef x64
 			usize page_set (usize *page_table, u16 i, usize n, usize flags);
+			usize page_unset (usize *page_table, u16 i);
 
 			// adds n to page counter c
 			// page counter is stored in ignored bits of first entry in every page table data structure

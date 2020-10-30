@@ -140,7 +140,7 @@ then
 
 	if [[ $1 = bochs ]]
 	then
-		termite -e "bochs -f bochsrc"
+		$TERM -e bochs -f bochsrc
 	fi
 	exit 0
 else

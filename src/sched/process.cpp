@@ -6,12 +6,11 @@
 #include <util/string.hpp>
 #include <util/io.hpp>
 #include <mem/mem.hpp>
+#include <arch/x64/common.hpp>
+#include <arch/x64/special.hpp>
 
 
 util::linked_list *sched::proc_list;
-
-
-extern "C" void load_cr3 (usize cr3);
 
 
 sched::process::process (u8 uid)
@@ -137,6 +136,10 @@ void sched::process::rem_thread (thread &thr)
 
 void sched::proc_init (void)
 {
+	// allow use of execute diable in pages
+	u64 efer_msr = rdmsr (EFER_MSR);
+	wrmsr (EFER_MSR, efer_msr | EFER_NXE);
+
 	proc_list = new util::linked_list;
 	if (!proc_list)
 		panic ("Couldn't make process list");
@@ -149,5 +152,5 @@ void sched::proc_init (void)
 	if (!idle_thread)
 		panic ("Couldn't make idle thread data");
 
-	load_cr3 (proc->addr_space.get_cr3 ());
+	set_cr3 (proc->addr_space.get_cr3 ());
 }

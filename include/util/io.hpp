@@ -5,12 +5,28 @@
 #include <stdarg.h>
 #include <util/string.hpp>
 #include <driver/tty.hpp>
+#include <def/keys.hpp>
 #include <arch/x64/common.hpp>
 
 
 #ifdef debug
+#define assert(expr)	\
+if (!(expr))		\
+{			\
+	kprinte ("%CERROR%C: %s at %s:%x:\nassertion \"%s\" failed\n", VGAC_RED, VGAC_WHITE, __func__, __FILE__, __LINE__, #expr);	\
+	return 0;	\
+}
+
+#define massert(obj)	\
+if ((obj) == NULL)	\
+{			\
+	kprinte ("%CERROR%C: %s at %s:%x:\nobject \"%s\" is null\n", VGAC_RED, VGAC_WHITE, __func__, __FILE__, __LINE__, #obj);	\
+	delete (obj);	\
+	return 0;	\
+}
+
 #define error(error_message)	\
-kprinte ("%s:%x: error in function %s: %s\n", __FILE__, __LINE__, __func__, error_message);
+kprinte ("%CERROR%C: %s at %s:%x:\n%s\n",VGAC_RED, VGAC_WHITE, __func__, __FILE__, __LINE__, error_message);
 
 #define debug_c(n)		\
 do				\
@@ -25,6 +41,8 @@ do				\
 } while (0);
 
 #else
+#define assert(expr)
+#define massert(obj)
 #define error(error_message)
 #define debug_c(n)
 #endif

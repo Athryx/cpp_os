@@ -130,6 +130,12 @@ void main_thread (void)
 	kprintf ("didn't crash\n");
 }
 
+__attribute__ ((naked))
+void t_thread ()
+{
+	hlt();
+}
+
 extern "C" [[ noreturn ]] void _start (void *mb2_table)
 {
 	// bochs magic breakpoint for debugging

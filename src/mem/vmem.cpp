@@ -475,7 +475,7 @@ bool mem::addr_space::unmap_internal_recurse (usize &virt_addr, usize &page_n, u
 			if (page_table[i] & V_PRESENT)
 				page_counter_add (page_table[0], -1);
 
-			page_set (page_table, i, 0, 0);
+			page_unset (page_table, i);
 			page_n --;
 		}
 
@@ -602,36 +602,35 @@ usize mem::addr_space::page_set (usize *page_table, u16 i, usize n, usize flags)
 {
 	n = n & PAGE_ADDR_POS;
 	flags = flags & PAGE_FLAGS_POS;
-	if (n == 0)
+	if (i == 0)
 	{
-		if (i == 0)
-		{
-			// have to do something special because of page counter in index 0
-			usize c_value = page_table[i] & ~PAGE_DATA_POS;
-			page_table[i] = (n | c_value) & ~V_PRESENT;
-		}
-		else
-		{
-			page_table[i] = n & ~V_PRESENT;
-		}
-		return 0;
+		// have to do something special because of page counter in index 0
+		usize c_value = page_table[i] & ~PAGE_DATA_POS;
+		page_table[i] = n | flags | c_value | V_PRESENT;
 	}
 	else
 	{
-		if (i == 0)
-		{
-			// have to do something special because of page counter in index 0
-			usize c_value = page_table[i] & ~PAGE_DATA_POS;
-			page_table[i] = n | flags | c_value | V_PRESENT;
-		}
-		else
-		{
-			page_table[i] = n | flags | V_PRESENT;
-		}
+		page_table[i] = n | flags | V_PRESENT;
 	}
 	return n;
 }
 
+
+usize mem::addr_space::page_unset (usize *page_table, u16 i)
+{
+	if (i == 0)
+	{
+		// have to do something special because of page counter in index 0
+		usize c_value = page_table[i] & ~PAGE_DATA_POS;
+		page_table[i] = c_value & ~V_PRESENT;
+	}
+	else
+	{
+		page_table[i] = 0;
+	}
+	// for compatability reasons with old method
+	return 0;
+}
 
 mem::virt_allocation::~virt_allocation ()
 {

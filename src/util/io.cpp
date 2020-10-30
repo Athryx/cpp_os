@@ -1,5 +1,6 @@
 #include <util/io.hpp>
 #include <types.hpp>
+#include <def/keys.hpp>
 #include <arch/x64/common.hpp>
 
 
@@ -34,6 +35,12 @@ void kprintf (const char *__restrict__ format, ...)
 					break;
 				case 'c':
 					vga_putc (va_arg (list, int));
+					break;
+				case 'C':
+					buf[0] = TTY_SET_COLOR;
+					buf[1] = (char) va_arg (list, int);
+					buf[2] = '\0';
+					vga_append (buf);
 					break;
 				default:
 					i ++;
@@ -75,6 +82,12 @@ void kprinte (const char *__restrict__ format, ...)
 					break;
 				case 'c':
 					vga_putc (va_arg (list, int));
+					break;
+				case 'C':
+					buf[0] = TTY_SET_COLOR;
+					buf[1] = (char) va_arg (list, int);
+					buf[2] = '\0';
+					vga_append (buf);
 					break;
 				default:
 					i ++;
