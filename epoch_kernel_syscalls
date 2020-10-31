@@ -26,25 +26,74 @@ r15: arg 10, saved if unused
 2: exec
 
 
-3: thread_new
+3: bool thread_new (thread_func_t func)
 
 
-4: thread_block
+return value:
+true: success
+false: failed to create new thread
 
 
-5: usize realloc (usize mem, usize orig, usize new)
+4: void thread_block (usize reason, | usize nsec)
 
 
-6: salloc
+reasons:
+0: does nothing
+1: yield, sets thread to running state and switches to another thread, if available
+if no threads other than the idle thread are ready to run, the current thread will continue to run
+2: destroy, switches to another thread and terminates the current thread
+3: sleep, will sleep until nsec nanoseconds after boot
+any other number will do nothing
 
 
-7: sfree
+5: isize create_semaphore (usize n)
+create a semaphore that lets up to n thread have it locked at the same time
 
 
-8: reg
+6: bool delete_semaphore (usize id)
+deletes the semaphore with id id
 
 
-9: usize notify (char *eid | usize pid, usize a1, usize a2, usize a3, usize a4, usize a5, | usize a6, | usize a7, | usize a8, | uszie a9)
+return value:
+true: success
+false: could not find or delete semaphore with id id
+
+
+return value:
+-1: failed to create semaphore
+any other value: semaphore id
+
+
+6: void semaphore_lock (usize id)
+waits until the current thread can lock the semaphore with id id, then execution continues
+
+
+7: bool semaphore_try_lock (usize id)
+attempts to lock the semaphore, if the current thread can acquire the semaphore without waiting, returns true, otherwise returns false
+
+
+return value:
+true: acquired the semaphore
+false: did not acquire the semaphore
+
+
+8: void semaphore_unlock (usize id)
+unlocks the semaphore, letting other threads lock it in the future
+
+
+9: usize realloc (usize mem, usize orig, usize new)
+
+
+10: salloc
+
+
+11: sfree
+
+
+12: reg
+
+
+13: usize notify (char *eid | usize pid, usize a1, usize a2, usize a3, usize a4, usize a5, | usize a6, | usize a7, | usize a8, | usize a9)
 
 
 options:

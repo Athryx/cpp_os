@@ -13,6 +13,9 @@
 #define T_READY 1
 #define T_DESTROY 2
 #define T_SLEEP 3
+#define T_REASON_MAX 3
+
+#define T_SEMAPHORE_WAIT 128
 
 // kernel uid
 #define KUID 0

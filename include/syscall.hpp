@@ -12,6 +12,12 @@ typedef struct __attribute__((packed))
 } syscall_vals_t;
 
 
-void syscall_init (void);
+namespace call
+{
+	// sycall functions have the signature usize sys_func (syscall_vals_t *vals, u32 options, usize args1 - usize args10)
+	void init (void);
 
-void sys_hi (void);
+	// pass in rsp, if it is in syscall stack unused zone, update syscall_stack_pointer
+	// TODO: make stack regrowable
+	void update_stack (usize rsp);
+}

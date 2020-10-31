@@ -8,7 +8,7 @@ bits 64
 syscall_entry:
 	mov r10, rsp		; save caller rsp
 
-	mov rsp, [rel sys_rsp]	; change in future when mult cpu addded
+	mov rsp, [rel syscall_sp]	; change in future when mult cpu addded
 	push r11		; save old flags
 	push r10		; save old rsp
 	push rcx		; save return rip
@@ -19,6 +19,7 @@ syscall_entry:
 	push r12
 	push rax
 	push rdi
+	sub rsp, 8		; 16 byte align stack pointer
 
 	mov rax, rsi
 	shl rax, 32		; cant use and because it messes things up
@@ -43,7 +44,7 @@ syscall_entry:
 	mov rax, 0
 
 .valid_syscall:
-	add rsp, 16		; put stack pointer to right place
+	add rsp, 24		; put stack pointer to right place
 	pop r12
 	pop r13
 	pop r14

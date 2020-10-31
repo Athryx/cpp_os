@@ -3,6 +3,7 @@
 #include <sched/process.hpp>
 #include <sched/sched_def.hpp>
 #include <int.hpp>
+#include <syscall.hpp>
 #include <util/time.hpp>
 #include <util/math.hpp>
 #include <util/linked_list.hpp>
@@ -38,6 +39,7 @@ static sched::registers *sched_time_handler (int_data *data, error_code_t error_
 	sched::thread_c->regs.rflags = data->rflags;
 	sched::thread_c->regs.cs = data->cs;
 	sched::thread_c->regs.ds = data->ss;
+	call::update_stack (data->rsp);
 
 	u64 nsec = time_nsec_nolatch ();
 
@@ -49,7 +51,7 @@ static sched::registers *sched_time_handler (int_data *data, error_code_t error_
 		if (temp->get_sleep_time () <= nsec)
 		{
 			// unblock will set state correctly
-			((sched::thread *) t_list[T_SLEEP].remove (i))->unblock ();
+			((sched::thread *) t_list[T_SLEEP][i])->unblock ();
 			i --;
 		}
 	}
@@ -80,6 +82,7 @@ static sched::registers *sched_int_handler (int_data *data, error_code_t error_c
 	sched::thread_c->regs.rflags = data->rflags;
 	sched::thread_c->regs.cs = data->cs;
 	sched::thread_c->regs.ds = data->ss;
+	call::update_stack (data->rsp);
 
 	lock ();
 	auto *out = sched::schedule ();
@@ -125,6 +128,30 @@ void sched::init ()
 	reg_int_handler (INT_SCHED, sched_int_handler, int_handler_type::reg);
 }
 
+bool sched::sys_thread_new (thread_func_t func)
+{
+	thread *new_thread = proc_c ().new_thread (func);
+	if (new_thread == NULL)
+		return false;
+	else
+		return true;
+}
+
+void sched::sys_thread_block (usize reason, usize nsec)
+{
+	if (reason > T_REASON_MAX || reason == T_RUNNING)
+		return;
+
+	switch (reason)
+	{
+		case T_SLEEP:
+			thread_c->nsleep_until (nsec);
+			break;
+		default:
+			thread_c->block (reason);
+	}
+}
+
 sched::registers *sched::schedule ()
 {
 	if (thread_post_c != 0)
@@ -150,12 +177,9 @@ sched::registers *sched::schedule ()
 		auto &proc_c_save = proc_c ();
 
 		if (thread_c->state == T_RUNNING)
-		{
-			// appending to this list will remove it from other list
-			t_list[T_READY].append (thread_c);
-			thread_c->state = T_READY;
-		}
+			thread_c->move_to (T_READY);
 
+		// TODO: add premptive logic here
 		thread_c = (thread *) t_list[T_READY].pop_start ();
 		t_list[T_RUNNING].append (thread_c);
 		thread_c->state = T_RUNNING;
@@ -198,8 +222,7 @@ sched::thread::~thread ()
 void sched::thread::block (u8 state)
 {
 	lock ();
-	t_list[state].append (this);
-	this->state = state;
+	move_to (state);
 	int_sched ();
 	unlock ();
 }
@@ -207,8 +230,7 @@ void sched::thread::block (u8 state)
 void sched::thread::unblock ()
 {
 	lock ();
-	t_list[T_READY].append (this);
-	state = T_READY;
+	move_to (T_READY);
 
 	// preempt the idle thread, since len 1 means only this thread is running
 	if (t_list[T_READY].get_len () == 1)
@@ -254,6 +276,15 @@ u64 sched::thread::update_time (u64 nsec)
 	return thread_c->time;
 }
 
+void sched::thread::move_to (usize state_list)
+{
+	if (state != T_SEMAPHORE_WAIT)
+		t_list[state].remove_p (this);
+	state = state_list;
+	if (state_list != T_SEMAPHORE_WAIT)
+		t_list[state_list].append (this);
+}
+
 void sched::thread::init (thread_func_t func)
 {
 	// if the idle thread has been created
@@ -275,7 +306,8 @@ void sched::thread::init (thread_func_t func)
 		if (&proc_c ().addr_space == &proc.addr_space)
 			proc.addr_space.sync_tlb (stack_start);
 
-		regs.rsp = stack_start + stack_size;
+		// system v abi says stack needs to be 16 byte aligned before call, so this - 8 is like ret address on stack
+		regs.rsp = stack_start + stack_size - 8;
 		regs.rip = (usize) func;
 
 		t_list[T_READY].append (this);
@@ -297,4 +329,46 @@ void sched::thread::init (thread_func_t func)
 		error("Could not add thread to thread list");
 		panic ("Recovering from this error is unimplmented");
 	}
+}
+
+
+sched::semaphore::semaphore (process &proc, usize n)
+: max_thr_c (n),
+thr_c (0)
+{
+}
+
+sched::semaphore::~semaphore ()
+{
+}
+
+void sched::semaphore::lock ()
+{
+	if (thr_c < max_thr_c)
+	{
+		thr_c ++;
+		return;
+	}
+
+	thread_c->move_to (T_SEMAPHORE_WAIT);
+	t_waiting.append (thread_c);
+}
+
+bool sched::semaphore::try_lock ()
+{
+	if (thr_c < max_thr_c)
+	{
+		thr_c ++;
+		return true;
+	}
+	return false;
+}
+
+void sched::semaphore::unlock ()
+{
+	// if this is true, thr_c already equals max_thr_c
+	if (t_waiting.get_len () != 0)
+		((sched::thread *) t_waiting[0])->unblock ();
+	else if (thr_c != 0)
+		thr_c --;
 }

@@ -62,8 +62,6 @@ u8 init (void *mb2_table)
 
 	gdt_init ();
 
-	syscall_init ();
-
 	// remap pics
 	pic_remap (PICM_OFFSET, PICM_OFFSET);
 
@@ -79,6 +77,8 @@ u8 init (void *mb2_table)
 	mb2_table = mem::init (mb2_table);
 
 	mem::kmem_init ();
+
+	call::init ();
 
 	sched::proc_init ();
 	sched::init ();

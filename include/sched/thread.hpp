@@ -127,6 +127,8 @@ namespace sched
 			// this version has time passed into it to avoid repeated calls to time_nsec
 			u64 update_time (u64 nsec);
 
+			void move_to (usize state_list);
+
 			inline usize get_sleep_time () { return sleep_time; }
 
 			inline usize get_stack_size () { return stack_size; }
@@ -152,9 +154,30 @@ namespace sched
 			bool process_alive;
 	};
 
+	// TODO: make mutex
+	// FIXME: put spinlock in
+	class semaphore
+	{
+		public:
+			semaphore (process &proc, usize n);
+			~semaphore ();
+
+			void lock ();
+			bool try_lock ();
+			void unlock ();
+
+		private:
+			const usize max_thr_c;
+			usize thr_c;
+			util::linked_list t_waiting;
+	};
+
 	extern sched::thread *thread_c;
 
 	void init ();
+
+	bool sys_thread_new (thread_func_t func);
+	void sys_thread_block (usize reason, usize nsec);
 
 	registers *schedule ();
 }
