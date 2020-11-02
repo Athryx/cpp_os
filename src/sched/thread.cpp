@@ -34,12 +34,6 @@ extern "C" void int_sched (void);
 static sched::registers *sched_time_handler (int_data *data, error_code_t error_code, sched::registers *regs)
 {
 	sched::thread_c->regs = *regs;
-	sched::thread_c->regs.rip = data->rip;
-	sched::thread_c->regs.rsp = data->rsp;
-	sched::thread_c->regs.rflags = data->rflags;
-	sched::thread_c->regs.cs = data->cs;
-	sched::thread_c->regs.ds = data->ss;
-	call::update_stack (data->rsp);
 
 	u64 nsec = time_nsec_nolatch ();
 
@@ -77,12 +71,6 @@ static sched::registers *sched_int_handler (int_data *data, error_code_t error_c
 		return NULL;
 
 	sched::thread_c->regs = *regs;
-	sched::thread_c->regs.rip = data->rip;
-	sched::thread_c->regs.rsp = data->rsp;
-	sched::thread_c->regs.rflags = data->rflags;
-	sched::thread_c->regs.cs = data->cs;
-	sched::thread_c->regs.ds = data->ss;
-	call::update_stack (data->rsp);
 
 	lock ();
 	auto *out = sched::schedule ();
@@ -215,7 +203,11 @@ sched::thread::~thread ()
 	if (process_alive)
 	{
 		proc.addr_space.free ((void *) stack_start);
-		proc.add_thread (*this);
+		if (kstack_size != 0)
+		{
+			proc.addr_space.free ((void *) kstack_start);
+		}
+		proc.rem_thread (*this);
 	}
 }
 
@@ -223,7 +215,8 @@ void sched::thread::block (u8 state)
 {
 	lock ();
 	move_to (state);
-	int_sched ();
+	if (this == thread_c)
+		int_sched ();
 	unlock ();
 }
 
@@ -301,6 +294,20 @@ void sched::thread::init (thread_func_t func)
 	{
 		usize u_flag = proc.get_uid () ? V_USER : 0;
 		stack_start = (usize) proc.addr_space.alloc (stack_size, V_XD | V_WRITE | u_flag);
+
+		if (proc.get_uid () != 0)
+		{
+			kstack_size = KSTACK_SIZE;
+			kstack_start = (usize) proc.addr_space.alloc (kstack_size, V_XD | V_WRITE);
+			// this one should be 16 byte aligned
+			regs.kernel_rsp = kstack_start + kstack_size;
+		}
+		else
+		{
+			kstack_size = 0;
+			kstack_start = 0;
+		}
+
 		// this should maybe be done better in future
 		// FIXME: might break if bad timing, this needs to be locked
 		if (&proc_c ().addr_space == &proc.addr_space)
@@ -332,7 +339,7 @@ void sched::thread::init (thread_func_t func)
 }
 
 
-sched::semaphore::semaphore (process &proc, usize n)
+sched::semaphore::semaphore (usize n)
 : max_thr_c (n),
 thr_c (0)
 {
@@ -340,6 +347,8 @@ thr_c (0)
 
 sched::semaphore::~semaphore ()
 {
+	while (t_waiting.get_len () != 0)
+		((sched::thread *) t_waiting.pop_start ())->unblock ();
 }
 
 void sched::semaphore::lock ()
@@ -368,7 +377,7 @@ void sched::semaphore::unlock ()
 {
 	// if this is true, thr_c already equals max_thr_c
 	if (t_waiting.get_len () != 0)
-		((sched::thread *) t_waiting[0])->unblock ();
+		((sched::thread *) t_waiting.pop_start ())->unblock ();
 	else if (thr_c != 0)
 		thr_c --;
 }

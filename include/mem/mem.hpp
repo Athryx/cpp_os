@@ -11,6 +11,10 @@ namespace mem
 {
 	// returns new location of mb2 table
 	void *init (void *mb2_table);
+
+	// sizes are in bytes
+	usize sys_realloc (usize mem, usize orig, usize n);
+
 	void *alloc (usize n);
 	void *allocz (usize n);
 	void *oalloc (u8 n);

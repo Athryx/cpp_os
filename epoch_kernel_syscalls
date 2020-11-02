@@ -20,13 +20,10 @@ r15: arg 10, saved if unused
 0: info
 
 
-1: fork
+1: exec
 
 
-2: exec
-
-
-3: bool thread_new (thread_func_t func)
+2: bool thread_new (thread_func_t func)
 
 
 return value:
@@ -34,7 +31,7 @@ true: success
 false: failed to create new thread
 
 
-4: void thread_block (usize reason, | usize nsec)
+3: void thread_block (usize reason, | usize nsec)
 
 
 reasons:
@@ -46,22 +43,28 @@ if no threads other than the idle thread are ready to run, the current thread wi
 any other number will do nothing
 
 
-5: isize create_semaphore (usize n)
+4: void exit (usize code)
+terminates process with exit code code
+
+
+5: usize create_semaphore (usize n)
 create a semaphore that lets up to n thread have it locked at the same time
-
-
-6: bool delete_semaphore (usize id)
-deletes the semaphore with id id
-
-
-return value:
-true: success
-false: could not find or delete semaphore with id id
 
 
 return value:
 -1: failed to create semaphore
 any other value: semaphore id
+
+
+6: bool delete_semaphore (usize id)
+deletes the semaphore with id id
+any threads currently waiting on this semaphore will be put into the ready state
+note: semaphore ids may be reused in the future if a new one is created
+
+
+return value:
+true: success
+false: could not find or delete semaphore with id id
 
 
 6: void semaphore_lock (usize id)
@@ -84,16 +87,31 @@ unlocks the semaphore, letting other threads lock it in the future
 9: usize realloc (usize mem, usize orig, usize new)
 
 
-10: salloc
+10: usize mmap (usize phys_addr, usize n)
+maps n bytes starting at physical address phys_addr into the calling process's address space
+only superuser processes can call mmap
 
 
-11: sfree
+return value:
+0: mmap was called with insufficent privallages or the requested memory zone is not memory mapped io
+virtual address of mapped region
 
 
-12: reg
+11: void munmap (usize virt_addr)
+unmaps memory previously mapped by mmap
+only superuser processes can call munmap
 
 
-13: usize notify (char *eid | usize pid, usize a1, usize a2, usize a3, usize a4, usize a5, | usize a6, | usize a7, | usize a8, | usize a9)
+12: salloc
+
+
+13: sfree
+
+
+14: reg
+
+
+15: usize notify (char *eid | usize pid, usize a1, usize a2, usize a3, usize a4, usize a5, | usize a6, | usize a7, | usize a8, | usize a9)
 
 
 options:

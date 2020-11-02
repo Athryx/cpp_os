@@ -12,8 +12,15 @@
 #define RSTAR_MSR 0xc0000083
 #define FMASK_MSR 0xc0000084
 
+#define FSBASE_MSR 0xC0000100
+#define GSBASE_MSR 0xC0000101
+#define GSBASEK_MSR 0xC0000102
+
 // allows execute disable in pages
 #define EFER_NXE (1 << 11)
+
+
+#define swapgs() asm volatile ("swapgs")
 
 
 extern "C" void asm_load_gdt (struct gdt_pointer *pointer);

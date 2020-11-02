@@ -89,5 +89,10 @@ struc int_data
 	.ss resq 1
 endstruc
 
+struc gs_data
+	.call_rsp resq 1
+	.call_save_rsp resq 1
+endstruc
+
 
 %endif

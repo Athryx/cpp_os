@@ -51,7 +51,7 @@ namespace mem
 	struct virt_allocation : public virt_zone
 	{
 		virt_allocation () { type = alloc_type::valloc; }
-		~virt_allocation ();
+		~virt_allocation () {}
 	};
 
 	struct phys_map : public virt_zone
@@ -128,6 +128,11 @@ namespace mem
 			inline usize get_cr3 () { return pml4_table - kernel_vma; }
 
 		private:
+			// will push available phys_zones on the end of list
+			// returns true on success, false on failure
+			// on failure it will ensure the list was in its original state
+			bool collect_phys_zones (util::array_list<phys_allocation> &list, usize n);
+
 			void *map_alloc_data (struct virt_allocation *allocation);
 
 			// doesn't keep track of the mapped regions

@@ -19,6 +19,8 @@ namespace sched
 		usize rdx;
 		usize rbp;
 		usize rsp;
+		usize kernel_rsp;
+		usize call_save_rsp;
 		usize rdi;
 		usize rsi;
 		usize r8;
@@ -46,6 +48,8 @@ namespace sched
 			.rdx = 0,
 			.rbp = 0,
 			.rsp = 0,
+			.kernel_rsp = 0,
+			.call_save_rsp = 0,
 			.rdi = 0,
 			.rsi = 0,
 			.r8 = 0,
@@ -69,6 +73,8 @@ namespace sched
 			.rdx = 0,
 			.rbp = 0,
 			.rsp = 0,
+			.kernel_rsp = 0,
+			.call_save_rsp = 0,
 			.rdi = 0,
 			.rsi = 0,
 			.r8 = 0,
@@ -92,6 +98,8 @@ namespace sched
 			.rdx = 0,
 			.rbp = 0,
 			.rsp = 0,
+			.kernel_rsp = 0,
+			.call_save_rsp = 0,
 			.rdi = 0,
 			.rsi = 0,
 			.r8 = 0,
@@ -148,6 +156,8 @@ namespace sched
 
 			usize stack_start;
 			usize stack_size;
+			usize kstack_start;
+			usize kstack_size;
 
 			u64 sleep_time;
 
@@ -159,7 +169,7 @@ namespace sched
 	class semaphore
 	{
 		public:
-			semaphore (process &proc, usize n);
+			semaphore (usize n);
 			~semaphore ();
 
 			void lock ();

@@ -6,6 +6,8 @@
 // 16 MiB
 #define STACK_RESRVE_SIZE (2 << 24)
 
+#define KSTACK_SIZE (2 << 18)
+
 // 5 ms for max time slice
 #define THREAD_TIME_SLICE 5000000
 

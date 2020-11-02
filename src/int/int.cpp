@@ -3,6 +3,7 @@
 #include <arch/x64/special.hpp>
 #include <util/misc.hpp>
 #include <sched/thread.hpp>
+#include <kdata.hpp>
 
 
 #define make_int_handler(vec)					\
@@ -59,6 +60,11 @@ extern "C" sched::registers *c_int_handler_##vec (struct int_data *data, error_c
 			else							\
 				int_handlers[vec][i] (data, error, regs);	\
 		}								\
+	}									\
+	if (out != NULL)							\
+	{									\
+		kdata::data.call_rsp = out->kernel_rsp;				\
+		kdata::data.call_save_rsp = out->call_save_rsp;			\
 	}									\
 	return out;								\
 }

@@ -1,9 +1,11 @@
 #include <sched/process.hpp>
+#include <sched/thread.hpp>
 #include <sched/sched_def.hpp>
 #include <types.hpp>
 #include <sched/elf_def.hpp>
 #include <util/misc.hpp>
 #include <util/string.hpp>
+#include <util/array_list.hpp>
 #include <util/io.hpp>
 #include <mem/mem.hpp>
 #include <arch/x64/common.hpp>
@@ -14,20 +16,29 @@ util::linked_list *sched::proc_list;
 
 
 sched::process::process (u8 uid)
-: uid (uid)
+: free_id (0),
+uid (uid)
 {
 	proc_list->append (this);
 }
 
 sched::process::~process ()
 {
+	proc_list->remove_p (this);
+
 	for (usize i = 0; i < threads.get_len (); i ++)
 	{
 		threads[i]->set_process_alive (false);
-		threads[i]->block (T_DESTROY);
+		if (threads[i] != thread_c)
+			threads[i]->block (T_DESTROY);
 	}
 
-	proc_list->remove_p (this);
+	if (this == &proc_c ())
+	{
+		// super jank, but should work
+		mem::kfree (this, sizeof (process));
+		thread_c->block (T_DESTROY);
+	}
 }
 
 sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
@@ -142,6 +153,58 @@ void sched::process::rem_thread (thread &thr)
 		delete this;
 }
 
+usize sched::process::create_semaphore (usize n)
+{
+	// might be wrong
+	auto *sem  = new semaphore (n);
+	if (sem == NULL)
+		return -1;
+
+	usize i = free_id;
+	if (free_id == semaphores.get_len ())
+	{
+		free_id ++;
+	}
+	else
+	{
+		usize j = free_id + 1;
+		for (; j < semaphores.get_len (); j ++)
+		{
+			if (semaphores[j] == NULL)
+			{
+				free_id = j;
+				break;
+			}
+		}
+		if (j == semaphores.get_len ())
+			free_id = j;
+	}
+
+	if (!semaphores.set (i, sem))
+		return -1;
+
+	return i;
+}
+
+bool sched::process::delete_semaphore (usize id)
+{
+	if (semaphores[id] == NULL)
+		return false;
+
+	if (id < free_id)
+		free_id = id;
+
+	return semaphores.set (id, NULL);
+}
+
+sched::semaphore *sched::process::get_semaphore (usize id)
+{
+	if (semaphores[id] == NULL)
+		return NULL;
+
+	return semaphores[id];
+}
+
 
 void sched::proc_init (void)
 {
@@ -162,4 +225,29 @@ void sched::proc_init (void)
 		panic ("Couldn't make idle thread data");
 
 	set_cr3 (proc->addr_space.get_cr3 ());
+}
+
+usize sched::sys_create_semaphore (usize n)
+{
+	return proc_c ().create_semaphore (n);
+}
+
+usize sched::sys_delete_semaphore (usize id)
+{
+	return proc_c ().delete_semaphore (id);
+}
+
+void sched::sys_semaphore_lock (usize id)
+{
+	proc_c ().get_semaphore (id)->lock ();
+}
+
+bool sched::sys_semaphore_try_lock (usize id)
+{
+	return proc_c ().get_semaphore (id)->try_lock ();
+}
+
+void sched::sys_semaphore_unlock (usize id)
+{
+	proc_c ().get_semaphore (id)->unlock ();
 }

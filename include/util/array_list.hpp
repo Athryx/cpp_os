@@ -13,26 +13,28 @@
 namespace util
 {
 	template <typename T>
+	// this arraylist is better for storing pointers to data
 	class array_list
 	{
 		public:
 			array_list ();
 			~array_list ();
 
-			bool push (T in);
-			T pop ();
+			bool push (T *in);
+			T *pop ();
 
-			bool insert (T in, usize i);
-			T remove (usize i);
+			bool insert (T *in, usize i);
+			T *remove (usize i);
 
 			T *operator[] (usize i);
+			bool set (usize i, T *in);
 
 			inline usize get_len () { return len; }
 
-		private:
+		protected:
 			usize len;
 			usize capacity;
-			T *list;
+			T **list;
 	};
 }
 
@@ -41,7 +43,7 @@ namespace util
 template <typename T>
 util::array_list<T>::array_list ()
 {
-	list = (T *) mem::kalloc (ARRAY_LIST_INTIAL_CAPACITY * sizeof (T));
+	list = (T **) mem::kalloc (ARRAY_LIST_INTIAL_CAPACITY * sizeof (void *));
 	if (list == NULL)
 	{
 		error ("not enough memory for array list")
@@ -54,23 +56,27 @@ util::array_list<T>::array_list ()
 template <typename T>
 util::array_list<T>::~array_list ()
 {
-	mem::kfree (list, capacity);
+	for (usize i = 0; i < len; i ++)
+	{
+		delete list[i];
+	}
+	mem::kfree (list, capacity * sizeof (void *));
 }
 
 template <typename T>
-bool util::array_list<T>::push (T in)
+bool util::array_list<T>::push (T *in)
 {
 	return insert (in, len);
 }
 
 template <typename T>
-T util::array_list<T>::pop ()
+T *util::array_list<T>::pop ()
 {
 	return remove (len - 1);
 }
 
 template <typename T>
-bool util::array_list<T>::insert (T in, usize i)
+bool util::array_list<T>::insert (T *in, usize i)
 {
 	if (!list)
 		return false;
@@ -85,9 +91,9 @@ bool util::array_list<T>::insert (T in, usize i)
 		return true;
 	}
 
-	T *list_old = list;
+	T **list_old = list;
 	// no need to check capacity bounds
-	list = (T *) mem::krealloc (list, capacity * sizeof (T), (capacity << 1) * sizeof (T));
+	list = (T **) mem::krealloc (list, capacity * sizeof (void *), (capacity << 1) * sizeof (void *));
 
 	if (!list)
 	{
@@ -107,12 +113,12 @@ bool util::array_list<T>::insert (T in, usize i)
 }
 
 template <typename T>
-T util::array_list<T>::remove (usize i)
+T *util::array_list<T>::remove (usize i)
 {
 	if (i >= len)
 		return NULL;
 
-	T out = list[i];
+	T *out = list[i];
 	len --;
 
 	for (; i < len; i ++)
@@ -121,7 +127,7 @@ T util::array_list<T>::remove (usize i)
 	if (len <= capacity >> 2)
 	{
 		// this shouldn't fail
-		list = krealloc (list, capacity * sizeof (T), (capacity >> 1) * sizeof (T));
+		list = (T **) mem::krealloc (list, capacity * sizeof (void *), (capacity >> 1) * sizeof (void *));
 		capacity >>= 1;
 	}
 
@@ -134,5 +140,15 @@ T *util::array_list<T>::operator[] (usize i)
 	if (i >= len)
 		return NULL;
 
-	return list + i;
+	return list[i];
+}
+
+template <typename T>
+bool util::array_list<T>::set (usize i, T *in)
+{
+	if (i >= len)
+		return false;
+
+	list[i] = in;
+	return true;
 }

@@ -13,6 +13,7 @@
 #include <sched/process.hpp>
 #include <sched/thread.hpp>
 #include <util/string.hpp>
+#include <kdata.hpp>
 
 
 static void double_fault (struct int_data* data, error_code_t error_code);
@@ -73,13 +74,13 @@ u8 init (void *mb2_table)
 	reg_int_handler (EXC_PAGE_FAULT, page_fault, int_handler_type::normal);
 	reg_int_handler (EXC_GENERAL_PROTECTION_FAULT, page_fault, int_handler_type::normal);
 
+	kdata::init ();
+
 	// mem::init will move mb2_table
 	mb2_table = mem::init (mb2_table);
-
 	mem::kmem_init ();
 
 	call::init ();
-
 	sched::proc_init ();
 	sched::init ();
 

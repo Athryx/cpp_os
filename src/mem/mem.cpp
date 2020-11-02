@@ -104,6 +104,10 @@ u8 init_allocator (mem::pallocator *allocer, struct mmap_entry *entry)
 	return out;
 }
 
+usize mem::sys_realloc (usize mem, usize orig, usize n)
+{
+}
+
 void *mem::alloc (usize n)
 {
 	void *out = NULL;

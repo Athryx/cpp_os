@@ -6,10 +6,12 @@
 #include <mem/vmem.hpp>
 #include <util/linked_list.hpp>
 #include <util/linked_list2.hpp>
+#include <util/array_list.hpp>
 
 
 namespace sched
 {
+	// TODO: use better data structure for storing semaphores
 	class process : public util::list_node
 	{
 		public:
@@ -17,18 +19,26 @@ namespace sched
 			~process ();
 
 			// TODO: add dynamic linking
-			// TODO: handler align in future
+			// TODO: handle align in future
+			// TODO: add thread local storage using fsbase msr
 			static process *load_elf (void *program, usize len, u8 uid);
 
 			thread *new_thread (thread_func_t func);
 			bool add_thread (thread &thr);
 			void rem_thread (thread &thr);
 
+			usize create_semaphore (usize n);
+			bool delete_semaphore (usize id);
+			semaphore *get_semaphore (usize id);
+
 			inline u8 get_uid () { return uid; }
 
 			mem::addr_space addr_space;
 		private:
 			util::linked_list2<thread> threads;
+			// next free semaphore id
+			usize free_id;
+			util::array_list<semaphore> semaphores;
 
 			u8 uid;
 	};
@@ -38,6 +48,12 @@ namespace sched
 
 
 	void proc_init (void);
+
+	usize sys_create_semaphore (usize n);
+	usize sys_delete_semaphore (usize id);
+	void sys_semaphore_lock (usize id);
+	bool sys_semaphore_try_lock (usize id);
+	void sys_semaphore_unlock (usize id);
 
 	// only call if thread_c initialized
 	inline process &proc_c (void) { return thread_c->proc; }

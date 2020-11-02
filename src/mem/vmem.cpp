@@ -58,26 +58,10 @@ void *mem::addr_space::alloc (usize n, usize flags)
 	allocation->len = n;
 	allocation->flags = flags;
 
-	usize temp = n;
-	usize alloc_size = mem::get_order_size (mem::get_order (n));
-	while (temp)
+	if (!collect_phys_zones (allocation->allocations, n))
 	{
-		if (alloc_size < PAGE_SIZE)
-		{
-			delete allocation;
-			return NULL;
-		}
-
-		void *mem = mem::alloc (alloc_size);
-		if (!mem)
-		{
-			alloc_size >>= 1;
-			continue;
-		}
-
-		struct phys_allocation palloc { .addr = (usize) mem, .len = alloc_size };
-		allocation->allocations.push (palloc);
-		temp -= alloc_size;
+		delete allocation;
+		return NULL;
 	}
 
 	// will insert it into list and set location if success
@@ -97,6 +81,14 @@ void *mem::addr_space::realloc (void *mem, usize n)
 {
 	// make sure this is still needed in future
 	usize virt_addr = align_down ((usize) mem, PAGE_SIZE);
+	if (virt_addr == 0)
+		return NULL;
+
+	if (n == 0)
+	{
+		free (mem);
+		return NULL;
+	}
 	n = align_up (n, PAGE_SIZE);
 
 	for (usize i = 0; i < virt_allocs.get_len (); i ++)
@@ -104,16 +96,26 @@ void *mem::addr_space::realloc (void *mem, usize n)
 		struct virt_allocation *allocation = (struct virt_allocation *) virt_allocs[i];
 		if (allocation->virt_addr == virt_addr && allocation->type == alloc_type::valloc)
 		{
-			usize new_size = allocation->len;
+			usize old_size = allocation->len;
+			// TODO: check if right
+			auto allocs = allocation->allocations;
 
-			if (new_size == n)
+			if (old_size == n)
 				return (void *) virt_addr;
 
-			if (new_size < n)
+			if (old_size > n)
 			{
+				usize i = allocs.get_len ();
+				while (i)
+				{
+					phys_allocation *temp = allocs[i];
+					if (i == 0)
+						break;
+					i --;
+				}
 			}
 
-			if (new_size > n)
+			if (old_size < n)
 			{
 			}
 		}
@@ -325,6 +327,42 @@ void mem::addr_space::sync_tlb_raw (usize virt_addr, usize n)
 	{
 		sync_page (addr);
 	}
+}
+
+bool mem::addr_space::collect_phys_zones (util::array_list<phys_allocation> &list, usize n)
+{
+	if (n == 0)
+		return true;
+
+	usize alloc_size = mem::get_order_size (mem::get_order (n));
+	usize save_len = list.get_len ();
+	while (n)
+	{
+		if (alloc_size < PAGE_SIZE)
+			break;
+
+		void *mem = mem::alloc (alloc_size);
+		if (!mem)
+		{
+			alloc_size >>= 1;
+			continue;
+		}
+
+		phys_allocation *palloc = new phys_allocation { .addr = (usize) mem, .len = alloc_size };
+		list.push (palloc);
+		n -= alloc_size;
+	}
+
+	if (n == 0)
+		return true;
+
+	while (save_len < list.get_len ())
+	{
+		auto palloc = list.pop ();
+		mem::free ((void *) palloc->addr);
+	}
+
+	return false;
 }
 
 void *mem::addr_space::map_alloc_data (struct virt_allocation *allocation)
@@ -662,14 +700,4 @@ usize mem::addr_space::page_unset (usize *page_table, u16 i)
 	}
 	// for compatability reasons with old method
 	return 0;
-}
-
-mem::virt_allocation::~virt_allocation ()
-{
-	for (usize i = 0; i < allocations.get_len (); i ++)
-	{
-		struct phys_allocation* alloc = allocations[i];
-		mem::free ((void *) alloc->addr);
-	}
-	allocations.~array_list ();
 }

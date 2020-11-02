@@ -1,3 +1,5 @@
+%include "asm_def.asm"
+
 global syscall_entry
 
 extern sys_rsp
@@ -6,9 +8,11 @@ extern syscalls
 section .text
 bits 64
 syscall_entry:
-	mov r10, rsp		; save caller rsp
+	; kernel stack pointer should be 16 byte aligned
+	mov [gs:gs_data.call_save_rsp], rsp	; save caller rsp
+	mov rsp, [gs:gs_data.call_rsp]		; load kernel rsp
+	sti
 
-	mov rsp, [rel syscall_sp]	; change in future when mult cpu addded
 	push r11		; save old flags
 	push r10		; save old rsp
 	push rcx		; save return rip
@@ -19,13 +23,13 @@ syscall_entry:
 	push r12
 	push rax
 	push rdi
-	sub rsp, 8		; 16 byte align stack pointer
+	sub rsp, 8		; for 16 byte alignment when calling c function
 
 	mov rax, rsi
 	shl rax, 32		; cant use and because it messes things up
 	shr rax, 32
 
-	cmp rax, 7		; make sure it is a valid syscall
+	cmp rax, 10		; make sure it is a valid syscall
 	jg .invalid_syscall
 
 	mov rcx, rbx		; move argument 2 into place
@@ -41,7 +45,7 @@ syscall_entry:
 	jmp .valid_syscall
 
 .invalid_syscall:
-	mov rax, 0
+	mov rax, -1 
 
 .valid_syscall:
 	add rsp, 24		; put stack pointer to right place
@@ -54,5 +58,6 @@ syscall_entry:
 	pop r10			; read old rsp
 	pop r11			; restore flags
 
-	mov rsp, r10
+	cli
+	mov rsp, [gs:gs_data.call_save_rsp]	; load save rsp
 	o64 sysret
