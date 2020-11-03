@@ -52,7 +52,13 @@ extern pic_eoi
 	mov ds, ax
 	mov es, ax
 	mov fs, ax
+
+	cli		; this it to stop gsbase being cleared when we reload gs segment register
+	swapgs		; TODO: there is probably a better way to do this
 	mov gs, ax
+	swapgs
+	sti
+
 	mov ax, [r14 + registers.cs]
 	mov qword [r15 + int_data.cs], rax
 

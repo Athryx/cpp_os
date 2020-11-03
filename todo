@@ -5,13 +5,17 @@ have max order be dynamically updated depending on free memory
 
 better memory zone handling than just global alloc function
 
-make initfs build script work with crtbegin.o and crtend.o
+make map_kernel method which uses big pages
+
 
 current:
-make map_kernel method which uses big pages
 
 make sure not to rely on exported headers
 
 use protection keys, might be less jank
 
 inmprove build system, rebuild resource file when needed and don't link when not needed, and allow setting compiler variable
+
+put stack protection pages at end
+
+put locks were needed

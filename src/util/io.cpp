@@ -10,7 +10,7 @@ void kprintf (const char *__restrict__ format, ...)
 	va_list list;
 	va_start(list, format);
 	kvprintf (format, list);
-	va_end (list);
+	va_end(list);
 }
 
 // in the future, print to serial console
@@ -19,7 +19,7 @@ void kprinte (const char *__restrict__ format, ...)
 	va_list list;
 	va_start(list, format);
 	kvprintf (format, list);
-	va_end (list);
+	va_end(list);
 }
 
 void kvprintf (const char *__restrict__ format, va_list list)
@@ -38,7 +38,7 @@ void kvprintf (const char *__restrict__ format, va_list list)
 					vga_append (buf);
 					break;
 				case 'x':
-					itoa_hex (buf, va_arg (list, u32));
+					itoa_hex (buf, va_arg (list, u64));
 					vga_append ("0x");
 					vga_append (buf);
 					break;
@@ -72,7 +72,7 @@ void kvprintf (const char *__restrict__ format, va_list list)
 	va_list list;
 	va_start(list, format);
 	kvprintf (format, list);
-	va_end (list);
+	va_end(list);
 
 	cli();
 	for (;;)

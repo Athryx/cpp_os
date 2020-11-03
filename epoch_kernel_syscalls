@@ -17,6 +17,8 @@ r13: arg 8, saved if unused
 r14: arg 9, saved if unused
 r15: arg 10, saved if unused
 
+bit 0 of options should always be set if syscall uses arg 7-10
+
 0: info
 
 
@@ -67,11 +69,11 @@ true: success
 false: could not find or delete semaphore with id id
 
 
-6: void semaphore_lock (usize id)
+7: void semaphore_lock (usize id)
 waits until the current thread can lock the semaphore with id id, then execution continues
 
 
-7: bool semaphore_try_lock (usize id)
+8: bool semaphore_try_lock (usize id)
 attempts to lock the semaphore, if the current thread can acquire the semaphore without waiting, returns true, otherwise returns false
 
 
@@ -80,14 +82,14 @@ true: acquired the semaphore
 false: did not acquire the semaphore
 
 
-8: void semaphore_unlock (usize id)
+9: void semaphore_unlock (usize id)
 unlocks the semaphore, letting other threads lock it in the future
 
 
-9: usize realloc (usize mem, usize orig, usize new)
+10: usize realloc (usize mem, usize orig, usize new)
 
 
-10: usize mmap (usize phys_addr, usize n)
+11: usize mmap (usize phys_addr, usize n)
 maps n bytes starting at physical address phys_addr into the calling process's address space
 only superuser processes can call mmap
 
@@ -97,31 +99,32 @@ return value:
 virtual address of mapped region
 
 
-11: void munmap (usize virt_addr)
+12: void munmap (usize virt_addr)
 unmaps memory previously mapped by mmap
 only superuser processes can call munmap
 
 
-12: salloc
+13: salloc
 
 
-13: sfree
+14: sfree
 
 
-14: reg
+15: reg
 
 
-15: usize notify (char *eid | usize pid, usize a1, usize a2, usize a3, usize a4, usize a5, | usize a6, | usize a7, | usize a8, | usize a9)
+16: usize notify (char *eid | usize pid, usize a1, usize a2, usize a3, usize a4, usize a5, | usize a6, | usize a7, | usize a8, | usize a9)
 
 
 options:
-bit 0 (notify_pid):
-0: send message to all processes with executable id specified in arg
-1: send message to process with pid
 
-bit 1 (notify_eargs):
+bit 0 (notify_eargs):
 0: send args a1 to a5 to process
 1: send args a1 to a9 to process, a6 to a9 may not be saved
+
+bit 1 (notify_pid):
+0: send message to all processes with executable id specified in arg
+1: send message to process with pid
 
 
 return value:

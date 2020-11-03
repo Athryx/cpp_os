@@ -11,7 +11,15 @@
 #define SYSCALL_STACK_LEN 32678
 
 
-void *syscalls[16] = {NULL,
+// temp
+void hi (void)
+{
+	kprintf ("hi :)\n");
+}
+
+
+void *syscalls[16] = {
+(void *) hi,
 NULL,
 (void *) sched::sys_thread_new,
 (void *) sched::sys_thread_block,
