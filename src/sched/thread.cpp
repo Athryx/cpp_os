@@ -7,6 +7,7 @@
 #include <util/time.hpp>
 #include <util/math.hpp>
 #include <util/linked_list.hpp>
+#include <syscall.hpp>
 #include <arch/x64/common.hpp>
 
 
@@ -116,7 +117,7 @@ void sched::init ()
 	reg_int_handler (INT_SCHED, sched_int_handler, int_handler_type::reg);
 }
 
-bool sched::sys_thread_new (thread_func_t func)
+bool sched::sys_thread_new (syscall_vals_t *vals, u32 options, thread_func_t func)
 {
 	thread *new_thread = proc_c ().new_thread (func);
 	if (new_thread == NULL)
@@ -125,7 +126,7 @@ bool sched::sys_thread_new (thread_func_t func)
 		return true;
 }
 
-void sched::sys_thread_block (usize reason, usize nsec)
+void sched::sys_thread_block (syscall_vals_t *vals, u32 options, usize reason, usize nsec)
 {
 	if (reason > T_REASON_MAX || reason == T_RUNNING)
 		return;
@@ -271,6 +272,8 @@ u64 sched::thread::update_time (u64 nsec)
 
 void sched::thread::move_to (usize state_list)
 {
+	if (state == state_list)
+		return;
 	if (state != T_SEMAPHORE_WAIT)
 		t_list[state].remove_p (this);
 	state = state_list;
@@ -347,8 +350,20 @@ thr_c (0)
 
 sched::semaphore::~semaphore ()
 {
+}
+
+void sched::semaphore::reset_ready ()
+{
 	while (t_waiting.get_len () != 0)
 		((sched::thread *) t_waiting.pop_start ())->unblock ();
+	delete this;
+}
+
+void sched::semaphore::reset_destroy ()
+{
+	while (t_waiting.get_len () != 0)
+		((sched::thread *) t_waiting.pop_start ())->move_to (T_DESTROY);
+	delete this;
 }
 
 void sched::semaphore::lock ()

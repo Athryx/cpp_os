@@ -17,13 +17,13 @@ syscall_entry:
 	push r10		; save old rsp
 	push rcx		; save return rip
 
+	sub rsp, 8		; for 16 byte alignment when calling c function
 	push r15		; push args on stack, needed here because rax is used
 	push r14
 	push r13
 	push r12
 	push rax
 	push rdi
-	sub rsp, 8		; for 16 byte alignment when calling c function
 
 	mov rax, rsi
 	shl rax, 32		; cant use and because it messes things up
@@ -48,11 +48,12 @@ syscall_entry:
 	mov rax, -1 
 
 .valid_syscall:
-	add rsp, 24		; put stack pointer to right place
+	add rsp, 16		; put stack pointer to right place
 	pop r12
 	pop r13
 	pop r14
 	pop r15
+	add rsp, 8
 
 	pop rcx			; restore return rip
 	pop r10			; read old rsp

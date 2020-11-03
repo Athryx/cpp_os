@@ -4,6 +4,7 @@
 #include <types.hpp>
 #include <mem/pmem.hpp>
 #include <mem/mem_def.hpp>
+#include <syscall.hpp>
 
 
 extern mem::pallocator allocators[MAX_MEM_NODES];
@@ -13,7 +14,7 @@ namespace mem
 	void *init (void *mb2_table);
 
 	// sizes are in bytes
-	usize sys_realloc (usize mem, usize orig, usize n);
+	usize sys_realloc (syscall_vals_t *vals, u32 options, usize mem, usize orig, usize n);
 
 	void *alloc (usize n);
 	void *allocz (usize n);

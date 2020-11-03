@@ -23,7 +23,7 @@ void *syscalls[16] = {
 NULL,
 (void *) sched::sys_thread_new,
 (void *) sched::sys_thread_block,
-NULL,
+(void *) sched::sys_exit,
 (void *) sched::sys_create_semaphore,
 (void *) sched::sys_delete_semaphore,
 (void *) sched::sys_semaphore_lock,

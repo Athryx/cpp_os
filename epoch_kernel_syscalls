@@ -47,6 +47,7 @@ any other number will do nothing
 
 4: void exit (usize code)
 terminates process with exit code code
+exit code is unimplemented
 
 
 5: usize create_semaphore (usize n)

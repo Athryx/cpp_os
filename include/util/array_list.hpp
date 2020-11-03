@@ -18,6 +18,7 @@ namespace util
 	{
 		public:
 			array_list ();
+			array_list (bool free_members);
 			~array_list ();
 
 			bool push (T *in);
@@ -30,11 +31,13 @@ namespace util
 			bool set (usize i, T *in);
 
 			inline usize get_len () { return len; }
+			inline void set_free_members (bool in) { free_members = in; }
 
 		protected:
 			usize len;
 			usize capacity;
 			T **list;
+			bool free_members;
 	};
 }
 
@@ -42,6 +45,21 @@ namespace util
 // because how templates work this is needed
 template <typename T>
 util::array_list<T>::array_list ()
+: free_members (true)
+{
+	list = (T **) mem::kalloc (ARRAY_LIST_INTIAL_CAPACITY * sizeof (void *));
+	if (list == NULL)
+	{
+		error ("not enough memory for array list")
+	}
+
+	capacity = ARRAY_LIST_INTIAL_CAPACITY;
+	len = 0;
+}
+
+template <typename T>
+util::array_list<T>::array_list (bool free_members)
+: free_members (free_members)
 {
 	list = (T **) mem::kalloc (ARRAY_LIST_INTIAL_CAPACITY * sizeof (void *));
 	if (list == NULL)
@@ -56,9 +74,12 @@ util::array_list<T>::array_list ()
 template <typename T>
 util::array_list<T>::~array_list ()
 {
-	for (usize i = 0; i < len; i ++)
+	if (free_members)
 	{
-		delete list[i];
+		for (usize i = 0; i < len; i ++)
+		{
+			delete list[i];
+		}
 	}
 	mem::kfree (list, capacity * sizeof (void *));
 }

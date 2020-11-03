@@ -7,6 +7,7 @@
 #include <util/linked_list.hpp>
 #include <util/linked_list2.hpp>
 #include <util/array_list.hpp>
+#include <syscall.hpp>
 
 
 namespace sched
@@ -35,6 +36,7 @@ namespace sched
 
 			mem::addr_space addr_space;
 		private:
+			// TODO: to explicitly delete any members that require deleteing at the end of destructor
 			util::linked_list2<thread> threads;
 			// next free semaphore id
 			usize free_id;
@@ -49,11 +51,13 @@ namespace sched
 
 	void proc_init (void);
 
-	usize sys_create_semaphore (usize n);
-	usize sys_delete_semaphore (usize id);
-	void sys_semaphore_lock (usize id);
-	bool sys_semaphore_try_lock (usize id);
-	void sys_semaphore_unlock (usize id);
+	void sys_exit (void);
+
+	usize sys_create_semaphore (syscall_vals_t *vals, u32 options, usize n);
+	usize sys_delete_semaphore (syscall_vals_t *vals, u32 options, usize id);
+	void sys_semaphore_lock (syscall_vals_t *vals, u32 options, usize id);
+	bool sys_semaphore_try_lock (syscall_vals_t *vals, u32 options, usize id);
+	void sys_semaphore_unlock (syscall_vals_t *vals, u32 options, usize id);
 
 	// only call if thread_c initialized
 	inline process &proc_c (void) { return thread_c->proc; }

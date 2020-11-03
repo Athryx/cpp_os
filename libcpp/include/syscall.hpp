@@ -15,7 +15,8 @@
 
 
 // this is an assembly function to call the syscalls
-extern "C" usize syscall (usize num, usize arg1, usize arg2, usize arg3, usize arg4, usize arg5, usize arg6, usize arg7, usize arg8, usize arg9, usize arg10);
+//extern "C" usize syscall (usize num, usize arg1, usize arg2, usize arg3, usize arg4, usize arg5, usize arg6, usize arg7, usize arg8, usize arg9, usize arg10);
+extern "C" usize syscall (usize num, ...);
 
 
 namespace sys

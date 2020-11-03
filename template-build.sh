@@ -10,7 +10,6 @@ BUILDDIR=abuild
 # subdirs are built in order
 SUBDIRS=""
 
-SUB_INCL=""
 INCL=include
 
 SRC=src
@@ -29,7 +28,8 @@ O="-O2"
 EXT=".o"
 [[ $1 = debug ]] && G_DEF="-D debug" G=-g && O=-O0 && EXT=".g.o"
 
-COMP_FLAGS="-c -ffreestanding -fno-rtti -fno-exceptions -Wall -Wextra -mno-red-zone -mgeneral-regs-only -mcmodel=large -D $ARCH $G_DEF"
+# append $LIB_INCL_PATHS to COMP_FLAGS variable definition if you want to use a library
+COMP_FLAGS="-I$INCL/ -c -ffreestanding -fno-rtti -fno-exceptions -Wall -Wextra -mno-red-zone -mgeneral-regs-only -mcmodel=large -D $ARCH $G_DEF"
 ASM_FLAGS="-I$INCL/arch/$ARCH/ -f elf64 -F dwarf"
 # append $LIB_PATHS to LINK_FLAGS variable definition if you want to use a library
 LINK_FLAGS="-ffreestanding -nostdlib -lgcc -mcmodel=large -n -T $LD_SCRIPT"
@@ -40,14 +40,9 @@ LD=amd64-elf-g++
 
 
 
-export LIB_PATHS="$LIB_PATHS -L$(realpath $PROJECT)"
 
-COMP_FLAGS="-I$INCL/ $COMP_FLAGS"
-for INCL_FILE in $SUB_INCL_OUT
-do
-	COMP_FLAGS="-I$INCL_FILE $COMP_FLAGS"
-done
-export SUB_INCL_OUT="$(realpath $SUB_INCL) $SUB_INCL_OUT"
+[[ $1 = __get_lib ]] && echo "-L$(realpath .)" && exit 0
+[[ $1 = __get_lib_incl ]] && echo "-I$(realpath $INCL)" && exit 0
 
 for C_FILE in $C_FILES
 do
@@ -119,6 +114,8 @@ function build_subdirs {
 	for SUBDIR in $SUBDIRS
 	do
 		$SUBDIR/build.sh $1 || return 1
+		export LIB_PATHS="$($SUBDIR/build.sh __get_lib) $LIB_PATHS"
+		export LIB_INCL_PATHS="$($SUBDIR/build.sh __get_lib_incl) $LIB_INCL_PATHS"
 	done
 }
 

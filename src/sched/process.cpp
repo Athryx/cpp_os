@@ -10,6 +10,7 @@
 #include <mem/mem.hpp>
 #include <arch/x64/common.hpp>
 #include <arch/x64/special.hpp>
+#include <syscall.hpp>
 
 
 util::linked_list *sched::proc_list;
@@ -17,6 +18,7 @@ util::linked_list *sched::proc_list;
 
 sched::process::process (u8 uid)
 : free_id (0),
+semaphores (false),
 uid (uid)
 {
 	proc_list->append (this);
@@ -25,6 +27,9 @@ uid (uid)
 sched::process::~process ()
 {
 	proc_list->remove_p (this);
+
+	for (usize i = 0; i < semaphores.get_len (); i ++)
+		semaphores[i]->reset_destroy ();
 
 	for (usize i = 0; i < threads.get_len (); i ++)
 	{
@@ -36,6 +41,9 @@ sched::process::~process ()
 	if (this == &proc_c ())
 	{
 		// super jank, but should work
+		delete &threads;
+		delete &semaphores;
+		delete &addr_space;
 		mem::kfree (this, sizeof (process));
 		thread_c->block (T_DESTROY);
 	}
@@ -194,7 +202,10 @@ bool sched::process::delete_semaphore (usize id)
 	if (id < free_id)
 		free_id = id;
 
-	return semaphores.set (id, NULL);
+	semaphores[id]->reset_ready ();
+
+	semaphores.set (id, NULL);
+	return true;
 }
 
 sched::semaphore *sched::process::get_semaphore (usize id)
@@ -227,27 +238,32 @@ void sched::proc_init (void)
 	set_cr3 (proc->addr_space.get_cr3 ());
 }
 
-usize sched::sys_create_semaphore (usize n)
+void sched::sys_exit (void)
+{
+	delete &proc_c ();
+}
+
+usize sched::sys_create_semaphore (syscall_vals_t *vals, u32 options, usize n)
 {
 	return proc_c ().create_semaphore (n);
 }
 
-usize sched::sys_delete_semaphore (usize id)
+usize sched::sys_delete_semaphore (syscall_vals_t *vals, u32 options, usize id)
 {
 	return proc_c ().delete_semaphore (id);
 }
 
-void sched::sys_semaphore_lock (usize id)
+void sched::sys_semaphore_lock (syscall_vals_t *vals, u32 options, usize id)
 {
 	proc_c ().get_semaphore (id)->lock ();
 }
 
-bool sched::sys_semaphore_try_lock (usize id)
+bool sched::sys_semaphore_try_lock (syscall_vals_t *vals, u32 options, usize id)
 {
 	return proc_c ().get_semaphore (id)->try_lock ();
 }
 
-void sched::sys_semaphore_unlock (usize id)
+void sched::sys_semaphore_unlock (syscall_vals_t *vals, u32 options, usize id)
 {
 	proc_c ().get_semaphore (id)->unlock ();
 }

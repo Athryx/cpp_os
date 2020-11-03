@@ -3,6 +3,7 @@
 
 #include <types.hpp>
 #include <util/linked_list.hpp>
+#include <syscall.hpp>
 
 
 namespace sched
@@ -135,6 +136,7 @@ namespace sched
 			// this version has time passed into it to avoid repeated calls to time_nsec
 			u64 update_time (u64 nsec);
 
+			// doesn't do anything if state equals state_list
 			void move_to (usize state_list);
 
 			inline usize get_sleep_time () { return sleep_time; }
@@ -170,7 +172,13 @@ namespace sched
 	{
 		public:
 			semaphore (usize n);
+			// frees this semaphore and does not move any threads anywhere
 			~semaphore ();
+			// don't call reset_ready or reset_destroy from thread in list, this shouldn't be possible anyways
+			// moves all waiting threads to T_READY state and frees this semaphore
+			void reset_ready ();
+			// moves all waiting threads to T_DESTROY state and frees this semaphore
+			void reset_destroy ();
 
 			void lock ();
 			bool try_lock ();
@@ -186,8 +194,8 @@ namespace sched
 
 	void init ();
 
-	bool sys_thread_new (thread_func_t func);
-	void sys_thread_block (usize reason, usize nsec);
+	bool sys_thread_new (syscall_vals_t *vals, u32 options, thread_func_t func);
+	void sys_thread_block (syscall_vals_t *vals, u32 options, usize reason, usize nsec);
 
 	registers *schedule ();
 }
