@@ -12,7 +12,8 @@ syscall:
 	mov r9, r8	; move arg 4 into place
 	mov r8, rcx	; move arg 3 into place
 
-	test rsi, 0x100000000	; test if extended args is set
+	mov rax, 0x100000000
+	test rsi, rax	; test if extended args is set
 	jz .no_eargs
 
 	push r12		; save these regs

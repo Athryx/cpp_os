@@ -41,9 +41,12 @@ u64 get_bits_raw (u64 n, u8 l, u8 h)
 
 usize canonical_addr (usize addr)
 {
-	if (addr & ((usize) 1 << (MAX_MEM_BITS - 1)))
+	/*if (addr & ((usize) 1 << (MAX_MEM_BITS - 1)))
 	{
 		return addr | ~(MAX_MEM - 1);
 	}
-	return addr & (MAX_MEM - 1);
+	return addr & (MAX_MEM - 1);*/
+	if (addr > (MAX_SUPPORTED_MEM >> 1) - 1)
+		return addr | ~MAX_SUPPORTED_MEM;
+	return addr;
 }

@@ -15,7 +15,7 @@ INCL=include
 SRC=src
 ARC=$SRC/arch/$ARCH
 
-C_FILES="$SRC/main.c"
+C_FILES="$SRC/main.cpp"
 
 ASM_FILES="$ARC/hi.asm"
 
@@ -28,7 +28,7 @@ EXT=".o"
 [[ $1 = debug ]] && G_DEF="-D debug" && G=-g && O=-O0 && EXT=".g.o"
 
 # append $LIB_INCL_PATHS to COMP_FLAGS variable definition if you want to use a library
-COMP_FLAGS="-I$INCL/ -c -ffreestanding -fno-rtti -fno-exceptions -Wall -Wextra -mno-red-zone -mgeneral-regs-only -D $ARCH $G_DEF"
+COMP_FLAGS="$LIB_INCL_PATHS -I$INCL/ -c -ffreestanding -fno-rtti -fno-exceptions -Wall -Wextra -mno-red-zone -mgeneral-regs-only -D $ARCH $G_DEF"
 ASM_FLAGS="-I$INCL/arch/$ARCH/ -f elf64 -F dwarf"
 # append $LIB_PATHS to LINK_FLAGS variable definition if you want to use a library
 LINK_FLAGS="$LIB_PATHS -ffreestanding -nostdlib -lgcc -lcpp -n -T $LD_SCRIPT"

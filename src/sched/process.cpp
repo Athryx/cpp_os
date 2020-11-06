@@ -235,6 +235,8 @@ void sched::proc_init (void)
 	if (!idle_thread)
 		panic ("Couldn't make idle thread data");
 
+	proc_c ().add_thread (*idle_thread);
+
 	set_cr3 (proc->addr_space.get_cr3 ());
 }
 

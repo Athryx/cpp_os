@@ -30,12 +30,12 @@ void sys::exit (usize code)
 
 usize sys::create_semaphore (usize n)
 {
-	syscall (__SYS_CREATE_SEMAPHORE, n);
+	return syscall (__SYS_CREATE_SEMAPHORE, n);
 }
 
 bool sys::delete_semaphore (usize id)
 {
-	syscall (__SYS_DELETE_SEMAPHORE, id);
+	return syscall (__SYS_DELETE_SEMAPHORE, id);
 }
 
 void sys::semaphore_lock (usize id)

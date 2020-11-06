@@ -9,7 +9,7 @@ static u32 irq_c = 1;
 
 void sti_safe (void)
 {
-	irq_c = max(irq_c, 1) - 1;
+	irq_c = max(irq_c, (u32) 1) - 1;
 	if (irq_c == 0)
 		sti();
 }

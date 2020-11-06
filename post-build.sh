@@ -2,7 +2,7 @@
 
 # first arg is builddir, second is out file, and third is build system arg
 
-grub-mkrescue -d /usr/lib/grub/i386-pc -o $1/kernel.iso $1/iso
+grub-mkrescue -d /usr/lib/grub/i386-pc -o $1/kernel.iso $1/iso 2> /dev/null
 
 [[ $3 = run ]] && qemu-system-x86_64 -m 5120 -cdrom $1/kernel.iso
 

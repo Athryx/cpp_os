@@ -97,7 +97,7 @@ namespace mem
 			// returns null on failure, and does not free any mamory pointed to by mem
 			// allocates and frees underlying physical memory as needed
 			// TODO: finish
-			void *realloc (void *mem, usize n);
+			void *realloc (void *mem, usize n, usize flags);
 			// frees virtual address mem and any underlying pysical memory
 			void free (void *mem);
 

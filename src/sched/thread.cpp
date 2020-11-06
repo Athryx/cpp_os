@@ -29,6 +29,8 @@ static void unlock (void);
 static void lock_all (void);
 static void unlock_all (void);
 
+static void thread_cleaner (void);
+
 extern "C" void int_sched (void);
 
 
@@ -64,18 +66,16 @@ static sched::registers *sched_time_handler (int_data *data, error_code_t error_
 	return NULL;
 }
 
-// FIXME: don't let this be called from userspace
 static sched::registers *sched_int_handler (int_data *data, error_code_t error_code, sched::registers *regs)
 {
+	// this should be called while locked
 	// interrupt was called from userspace
 	if (data->cs & 0b11)
 		return NULL;
 
 	sched::thread_c->regs = *regs;
 
-	lock ();
 	auto *out = sched::schedule ();
-	unlock ();
 
 	return out;
 }
@@ -91,7 +91,6 @@ static void unlock (void)
 	sti_safe ();
 }
 
-// FIXME: I don't think lock_all and unlock_all are atomic either
 static void lock_all (void)
 {
 	lock ();
@@ -111,10 +110,36 @@ static void unlock_all (void)
 	unlock ();
 }
 
+static void thread_cleaner (void)
+{
+	for (;;)
+	{
+		for (;;)
+		{
+			lock ();
+			if (!t_list[T_DESTROY].get_len ())
+				break;
+			auto *temp = (sched::thread *) t_list[T_DESTROY].pop_start ();
+			unlock ();
+
+			if (temp->get_stack_size () == 0)
+				panic ("tried to free the idle thread");
+
+			delete temp;
+		}
+		unlock ();
+
+		// sleep for 0.3 seconds
+		sched::thread_c->nsleep (300000000);
+	}
+}
+
 void sched::init ()
 {
 	reg_int_handler (IRQ_TIMER, sched_time_handler, int_handler_type::reg);
 	reg_int_handler (INT_SCHED, sched_int_handler, int_handler_type::reg);
+	if (proc_c ().new_thread (thread_cleaner) == NULL)
+		panic ("Could not create cleaner thread");
 }
 
 bool sched::sys_thread_new (syscall_vals_t *vals, u32 options, thread_func_t func)
@@ -147,16 +172,6 @@ sched::registers *sched::schedule ()
 	{
 		thread_post_flag = true;
 		return NULL;
-	}
-
-	while (t_list[T_DESTROY].get_len () != 0 && t_list[T_DESTROY][0] != thread_c)
-	{
-		thread *temp = (thread *) t_list[T_DESTROY].pop_start ();
-		// don't free the idle thread
-		if (temp->get_stack_size () == 0)
-			panic ("tried to free the idle thread");
-
-		delete temp;
 	}
 
 	if (t_list[T_READY].get_len () != 0)
@@ -311,8 +326,7 @@ void sched::thread::init (thread_func_t func)
 			kstack_start = 0;
 		}
 
-		// this should maybe be done better in future
-		// FIXME: might break if bad timing, this needs to be locked
+		// this doesn't need to lock since proc is parametere, and the thread this is running in will never change, so proc_c () will never change
 		if (&proc_c ().addr_space == &proc.addr_space)
 			proc.addr_space.sync_tlb (stack_start);
 
@@ -320,11 +334,15 @@ void sched::thread::init (thread_func_t func)
 		regs.rsp = stack_start + stack_size - 8;
 		regs.rip = (usize) func;
 
+		lock ();
 		t_list[T_READY].append (this);
 		state = T_READY;
+		unlock ();
 	}
 	else
 	{
+		// no need to lock in init, interrupts are disabled
+		// TODO: might need to lock once smp is added
 		stack_start = 0;
 
 		t_list[T_RUNNING].append (this);
@@ -354,45 +372,59 @@ sched::semaphore::~semaphore ()
 
 void sched::semaphore::reset_ready ()
 {
+	::lock ();
 	while (t_waiting.get_len () != 0)
 		((sched::thread *) t_waiting.pop_start ())->unblock ();
+	::unlock ();
 	delete this;
 }
 
 void sched::semaphore::reset_destroy ()
 {
+	::lock ();
 	while (t_waiting.get_len () != 0)
 		((sched::thread *) t_waiting.pop_start ())->move_to (T_DESTROY);
+	::unlock ();
 	delete this;
 }
 
 void sched::semaphore::lock ()
 {
+	::lock ();
 	if (thr_c < max_thr_c)
 	{
 		thr_c ++;
+		::unlock ();
 		return;
 	}
 
 	thread_c->move_to (T_SEMAPHORE_WAIT);
 	t_waiting.append (thread_c);
+	int_sched ();
+	::unlock ();
 }
 
 bool sched::semaphore::try_lock ()
 {
+	::lock ();
 	if (thr_c < max_thr_c)
 	{
 		thr_c ++;
+		::unlock ();
 		return true;
 	}
+	::unlock ();
 	return false;
 }
 
 void sched::semaphore::unlock ()
 {
+	::lock ();
 	// if this is true, thr_c already equals max_thr_c
+	// this unblock will never cause a thread switch
 	if (t_waiting.get_len () != 0)
 		((sched::thread *) t_waiting.pop_start ())->unblock ();
 	else if (thr_c != 0)
 		thr_c --;
+	::unlock ();
 }

@@ -4,6 +4,7 @@
 #include <types.hpp>
 #include <util/linked_list.hpp>
 #include <syscall.hpp>
+#include <sync/spinlock.hpp>
 
 
 namespace sched
@@ -137,6 +138,7 @@ namespace sched
 			u64 update_time (u64 nsec);
 
 			// doesn't do anything if state equals state_list
+			// should be called while scheduler is locked
 			void move_to (usize state_list);
 
 			inline usize get_sleep_time () { return sleep_time; }

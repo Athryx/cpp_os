@@ -2,6 +2,7 @@
 #include <types.hpp>
 #include <mem/pmem.hpp>
 #include <mb2.hpp>
+#include <sched/process.hpp>
 #include <util/string.hpp>
 #include <util/misc.hpp>
 #include <util/io.hpp>
@@ -104,8 +105,9 @@ u8 init_allocator (mem::pallocator *allocer, struct mmap_entry *entry)
 	return out;
 }
 
-usize mem::sys_realloc (syscall_vals_t *vals, u32 options, usize mem, usize orig, usize n)
+usize mem::sys_realloc (syscall_vals_t *vals, u32 options, usize mem, usize n)
 {
+	return (usize) sched::proc_c ().addr_space.realloc ((void *) mem, n, V_USER | V_WRITE | V_XD);
 }
 
 void *mem::alloc (usize n)
