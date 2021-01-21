@@ -30,6 +30,13 @@ void kprintf (const char *__restrict__ format, ...)
 	va_end(list);
 }
 
+extern "C" void c_asmprint ()
+{
+		static u32 n = 0;
+		kprinte ("debug string %u\n", n);
+		n ++;
+}
+
 void kprinte (const char *__restrict__ format, ...)
 {
 	va_list list;

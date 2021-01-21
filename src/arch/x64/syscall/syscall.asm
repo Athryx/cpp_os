@@ -63,5 +63,7 @@ syscall_entry:
 	pop r11			; restore flags
 
 	cli
+	swapgs
 	mov rsp, [gs:gs_data.call_save_rsp]	; load save rsp
+	swapgs
 	o64 sysret

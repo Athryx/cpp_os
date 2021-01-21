@@ -2,6 +2,9 @@
 %define ASM_DEF_ASM
 
 
+extern c_asmprint
+
+
 %define PICM_OFFSET 32
 %define PICS_OFFSET 40
 
@@ -95,6 +98,31 @@ struc gs_data
 	.call_rsp resq 1
 	.call_save_rsp resq 1
 endstruc
+
+
+section .text
+bits 64
+asmprint:
+	push rax
+	push rcx
+	push rdx
+	push rdi
+	push rsi
+	push r8
+	push r9
+	push r10
+	push r11
+	call c_asmprint
+	pop r11
+	pop r10
+	pop r9
+	pop r8
+	pop rsi
+	pop rdi
+	pop rdx
+	pop rcx
+	pop rax
+	ret
 
 
 %endif

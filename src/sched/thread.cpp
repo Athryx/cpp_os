@@ -317,7 +317,8 @@ void sched::thread::init (thread_func_t func)
 			stack_start = (usize) proc.addr_space.alloc (stack_size, V_XD | V_WRITE | u_flag);
 
 			kstack_size = KSTACK_SIZE;
-			kstack_start = (usize) proc.addr_space.alloc (kstack_size, V_XD | V_WRITE);
+			// kstack_start = (usize) proc.addr_space.alloc (kstack_size, V_XD | V_WRITE);
+			kstack_start = (usize) mem::kalloc (kstack_size);
 			// this one should be 16 byte aligned
 			regs.kernel_rsp = kstack_start + kstack_size;
 		}
