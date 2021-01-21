@@ -10,55 +10,28 @@
 
 #ifdef debug
 #define assert(expr)	\
-if (!(expr))		\
-{			\
-	kprinte ("%CERROR%C: %s at %s:%u:\nassertion \"%s\" failed\n", VGAC_RED, VGAC_WHITE, __func__, __FILE__, __LINE__, #expr);	\
-	return 0;	\
-}
+(expr) ? (void) 0 : assert_fail (#expr, NULL, __FILE__, __func__, __LINE__)
 
-#define massert(obj)	\
-if ((obj) == NULL)	\
-{			\
-	kprinte ("%CERROR%C: %s at %s:%u:\nobject \"%s\" is null\n", VGAC_RED, VGAC_WHITE, __func__, __FILE__, __LINE__, #obj);	\
-	delete (obj);	\
-	return 0;	\
-}
-
-#define error(fmt, ...)	\
-do			\
-{			\
-kprinte ("%CERROR%C: %s at %s:%u:\n",VGAC_RED, VGAC_WHITE, __func__, __FILE__, __LINE__);	\
-kprinte (fmt, ##__VA_ARGS__);	\
-}			\
-while (0);
-// semicolon needed for backward compatability
-
-#define debug_c(n)		\
-do				\
-{				\
-	static usize debug_counter = 0;	\
-	if (debug_counter == (n))	\
-	{				\
-		kprintf ("here\n");	\
-		for (usize i = 0; i < 0x2fffffff; i ++) {}	\
-	}				\
-	kprinte ("%s:%s: number %x\n", __FILE__, __func__, debug_counter ++);	\
-} while (0);
+#define assertm(expr, message)	\
+(expr) ? (void) 0 : assert_fail (#expr, message, __FILE__, __func__, __LINE__)
 
 #else
 #define assert(expr)
-#define massert(obj)
-#define error(error_message)
-#define debug_c(n)
+#define assertm(expr, message)
 #endif
 
 /* only supported formats for format strings are:
 %s
 %x
 %c
+%u
 */
+void debugcon_putc (char c);
+void debugcon_puts (const char *str);
+
 void kprintf (const char *__restrict__ format, ...);
 void kprinte (const char *__restrict__ format, ...);
-// TODO: maybe pass va_list by reference
 void kvprintf (const char *__restrict__ format, va_list list);
+void kvprinte (const char *__restrict__ format, va_list list);
 [[ noreturn ]] void panic (const char *__restrict__ format, ...);
+[[ noreturn ]] void assert_fail (const char *expr, const char *message, const char *file, const char *func, u32 line);

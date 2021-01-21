@@ -4,7 +4,7 @@
 
 grub-mkrescue -d /usr/lib/grub/i386-pc -o $1/kernel.iso $1/iso 2> /dev/null
 
-[[ $3 = run ]] && qemu-system-x86_64 -m 5120 -cdrom $1/kernel.iso
+[[ $3 = run ]] && qemu-system-x86_64 -m 5120 -cdrom $1/kernel.iso -debugcon stdio
 
 if [[ $3 = debug ]]
 then

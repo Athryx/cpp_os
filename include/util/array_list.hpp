@@ -48,10 +48,7 @@ util::array_list<T>::array_list ()
 : free_members (true)
 {
 	list = (T **) mem::kalloc (ARRAY_LIST_INTIAL_CAPACITY * sizeof (void *));
-	if (list == NULL)
-	{
-		error ("not enough memory for array list")
-	}
+	assert(list);
 
 	capacity = ARRAY_LIST_INTIAL_CAPACITY;
 	len = 0;
@@ -62,10 +59,7 @@ util::array_list<T>::array_list (bool free_members)
 : free_members (free_members)
 {
 	list = (T **) mem::kalloc (ARRAY_LIST_INTIAL_CAPACITY * sizeof (void *));
-	if (list == NULL)
-	{
-		error ("not enough memory for array list")
-	}
+	assert(list);
 
 	capacity = ARRAY_LIST_INTIAL_CAPACITY;
 	len = 0;

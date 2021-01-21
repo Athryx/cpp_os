@@ -36,8 +36,7 @@ namespace sched
 		usize rflags;
 		usize rip;
 		u16 cs;
-		// ds is value for all the data segments
-		u16 ds;
+		u16 ss;
 	} __attribute__ ((packed));
 
 	class thread : public util::list_node
@@ -65,7 +64,7 @@ namespace sched
 			.rflags = 0x3202,
 			.rip = 0,
 			.cs = 0x23,
-			.ds = 0x1b
+			.ss = 0x1b
 			};
 
 			static constexpr registers superuser_regs = {
@@ -90,7 +89,7 @@ namespace sched
 			.rflags = 0x202,
 			.rip = 0,
 			.cs = 0x23,
-			.ds = 0x1b
+			.ss = 0x1b
 			};
 
 			static constexpr registers kernel_regs = {
@@ -115,7 +114,7 @@ namespace sched
 			.rflags = 0x202,
 			.rip = 0,
 			.cs = 0x08,
-			.ds = 0x10
+			.ss = 0x10
 			};
 
 		public:

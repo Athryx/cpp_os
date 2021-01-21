@@ -9,8 +9,11 @@ section .text
 bits 64
 syscall_entry:
 	; kernel stack pointer should be 16 byte aligned
+	; iretq clears gs_base msr, so we have to keep it in gs_base_k, and use swapgs to access it
+	swapgs
 	mov [gs:gs_data.call_save_rsp], rsp	; save caller rsp
 	mov rsp, [gs:gs_data.call_rsp]		; load kernel rsp
+	swapgs
 	sti
 
 	push r11		; save old flags

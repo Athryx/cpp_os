@@ -7,7 +7,7 @@
 
 namespace kdata
 {
-	struct gs_data
+	struct __attribute__ ((packed)) gs_data
 	{
 		usize call_rsp;
 		usize call_save_rsp;

@@ -142,8 +142,8 @@ extern "C" [[ noreturn ]] void _start (void *mb2_table)
 		panic ("init failed");
 	}
 
-	//auto *proc_elf = sched::process::load_elf ((void *) &initfs, (usize) &initfs_len, SUID);
-	sched::proc_c ().new_thread (main_thread);
+	auto *proc_elf = sched::process::load_elf ((void *) &initfs, (usize) &initfs_len, SUID);
+	//sched::proc_c ().new_thread (main_thread);
 	//main_thread ();
 	// test
 	//kthread_new (thread_2);

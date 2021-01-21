@@ -80,7 +80,7 @@ struc registers
 	.rflags resq 1
 	.rip resq 1
 	.cs resw 1
-	.ds resw 1
+	.ss resw 1
 endstruc
 
 struc int_data

@@ -9,7 +9,7 @@ void thread_2 (void)
 
 int main (void)
 {
-	sys::thread_new (thread_2);
+	//sys::thread_new (thread_2);
 	sys_hi ();
 	for (;;);
 }

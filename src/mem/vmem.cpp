@@ -3,6 +3,7 @@
 #include <mem/mem.hpp>
 #include <mem/kmem.hpp>
 #include <util/misc.hpp>
+#include <sched/process.hpp>
 
 
 extern usize PDP_table;
@@ -74,9 +75,13 @@ void *mem::addr_space::alloc (usize n, usize flags)
 		return NULL;
 	}
 
+	if (&sched::proc_c ().addr_space == this)
+		sync_tlb ((usize) out);
+
 	return out;
 }
 
+// FIXME: need to call sync_tlb on this
 void *mem::addr_space::realloc (void *mem, usize n, usize flags)
 {
 	// make sure this is still needed in future
@@ -139,6 +144,9 @@ void mem::addr_space::free (void *mem)
 			delete allocation;
 		}
 	}
+
+	if (&sched::proc_c ().addr_space == this)
+		sync_tlb (virt_addr);
 }
 
 void *mem::addr_space::map (usize phys_addr, usize n, usize flags)
@@ -173,6 +181,9 @@ void *mem::addr_space::map (usize phys_addr, usize n, usize flags)
 		mem::kfree (zone, sizeof (struct phys_map));
 		return NULL;
 	}
+
+	if (&sched::proc_c ().addr_space == this)
+		sync_tlb (virt_addr);
 
 	return (void *) virt_addr;
 }
@@ -214,6 +225,9 @@ bool mem::addr_space::map_at (usize phys_addr, usize virt_addr, usize n, usize f
 		return false;
 	}
 
+	if (&sched::proc_c ().addr_space == this)
+		sync_tlb (virt_addr);
+
 	return true;
 }
 
@@ -233,6 +247,9 @@ void *mem::addr_space::unmap (usize virt_addr)
 			return out;
 		}
 	}
+
+	if (&sched::proc_c ().addr_space == this)
+		sync_tlb (virt_addr);
 
 	return NULL;
 }
@@ -599,11 +616,8 @@ usize mem::addr_space::find_address (struct virt_zone &allocation)
 
 	// case of zero is already handled
 	struct virt_zone *current = (struct virt_zone *) virt_allocs[i - 1];
-	if (current->type != alloc_type::kernel)
-	{
-		error("Expected the end of virt_alloc list to have alloc_type kernel")
-		return 0;
-	}
+	assertm(current->type == alloc_type::kernel, "Expected the end of virt_alloc list to have alloc_type kernel");
+
 	struct virt_zone *last = NULL;
 
 	if (i == 1 && current->virt_addr - PAGE_SIZE >= allocation.len)

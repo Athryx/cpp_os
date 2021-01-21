@@ -212,11 +212,7 @@ list_node *linked_list::operator[] (usize index)
 		else
 			zone = zone->prev;
 
-		if (zone == NULL)
-		{
-			error("zone should not be null")
-			return NULL;
-		}
+		assert(zone);
 	}
 
 	current = zone;

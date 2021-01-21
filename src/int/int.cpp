@@ -5,6 +5,7 @@
 #include <sched/thread.hpp>
 #include <kdata.hpp>
 #include <gdt.hpp>
+#include <util/io.hpp>
 
 
 #define make_int_handler(vec)					\
@@ -51,6 +52,8 @@ void int_handler_##vec (struct int_data	*data)			\
 extern "C" void int_handler_##vec (void); /* for reg_b_handler */			\
 extern "C" sched::registers *c_int_handler_##vec (struct int_data *data, error_code_t error, sched::registers *regs)	\
 {										\
+	if (!(regs->cs & 0b11))							\
+		regs->call_save_rsp = kdata::data.call_save_rsp;		\
 	sched::registers *out = NULL;						\
 	for (u8 i = 0; i < MAX_HANDLERS; i ++)					\
 	{									\
@@ -66,7 +69,8 @@ extern "C" sched::registers *c_int_handler_##vec (struct int_data *data, error_c
 	{									\
 		kdata::data.call_rsp = out->kernel_rsp;				\
 		kdata::data.call_save_rsp = out->call_save_rsp;			\
-		/*tss.rsp0 = out->kernel_rsp;*/					\
+		tss.rsp0 = out->kernel_rsp;					\
+		kprinte ("Context switch:\nfrom function c_int_handler_%u\nrip: %x\nrsp: %x\nkernel_rsp: %x\n\n", vec, out->rip, out->rsp, out->kernel_rsp);	\
 	}									\
 	return out;								\
 }
@@ -123,6 +127,30 @@ make_int_handler(29)
 make_int_handler_e(30)
 make_int_handler(31)
 make_c_int_handler(32)
+/*extern "C" void int_handler_32 (void);
+extern "C" sched::registers *c_int_handler_32 (struct int_data *data, error_code_t error, sched::registers *regs)
+{
+	if (!(regs->cs & 0b11))							
+		regs->call_save_rsp = kdata::data.call_save_rsp;		
+	sched::registers *out = NULL;
+	for (u8 i = 0; i < MAX_HANDLERS; i ++)
+	{
+		if (int_handlers[32][i] != NULL)
+		{
+			if (i == MAX_HANDLERS - 1)				
+				out = int_handlers[32][i] (data, error, regs);
+			else							
+				int_handlers[32][i] (data, error, regs);	
+		}								
+	}									
+	if (out != NULL)							
+	{									
+		kdata::data.call_rsp = out->kernel_rsp;				
+		kdata::data.call_save_rsp = out->call_save_rsp;			
+		tss.rsp0 = out->kernel_rsp;					
+	}									
+	return out;								
+}*/
 make_irq_handler(33)
 make_irq_handler(34)
 make_irq_handler(35)
@@ -139,6 +167,31 @@ make_irq_handler(45)
 make_irq_handler(46)
 make_irq_handler(47)
 make_c_int_handler(128) 
+/*extern "C" void int_handler_128 (void);
+extern "C" sched::registers *c_int_handler_128 (struct int_data *data, error_code_t error, sched::registers *regs)
+{
+	if (!(regs->cs & 0b11))							
+		regs->call_save_rsp = kdata::data.call_save_rsp;		
+	sched::registers *out = NULL;						
+	for (u8 i = 0; i < MAX_HANDLERS; i ++)					
+	{									
+		if (int_handlers[128][i] != NULL)				
+		{								
+			if (i == MAX_HANDLERS - 1)				
+				out = int_handlers[128][i] (data, error, regs);	
+			else							
+				int_handlers[128][i] (data, error, regs);	
+		}								
+	}									
+	if (out != NULL)							
+	{									
+		kdata::data.call_rsp = out->kernel_rsp;				
+		kdata::data.call_save_rsp = out->call_save_rsp;			
+		tss.rsp0 = out->kernel_rsp;					
+		kprinte ("Context switch to thread with\nrip: %x\nrsp: %x\nkernel_rsp: %x\n", out->rip, out->rsp, out->kernel_rsp);	
+	}									
+	return out;								
+}*/
 
 
 // have to do it like this since no memory allocation yet

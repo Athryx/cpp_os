@@ -34,7 +34,7 @@ extern pic_eoi
 	mov rax, [%1 + int_data.rsp]
 	mov [rsp + registers.rsp], rax
 	mov rax, [%1 + int_data.ss]
-	mov [rsp + registers.ds], ax
+	mov [rsp + registers.ss], ax
 %endmacro
 
 ; r14 should hold pointer to registers data structure
@@ -47,17 +47,14 @@ extern pic_eoi
 	mov [r15 + int_data.rflags], rax
 
 	mov rax, 0
-	mov ax, [r14 + registers.ds]
+	mov ax, [r14 + registers.ss]
 	mov qword [r15 + int_data.ss], rax
-	mov ds, ax
-	mov es, ax
-	mov fs, ax
 
-	cli		; this it to stop gsbase being cleared when we reload gs segment register
-	swapgs		; TODO: there is probably a better way to do this
-	mov gs, ax
-	swapgs
-	sti
+	; cli		; this it to stop gsbase being cleared when we reload gs segment register
+	; swapgs	; TODO: there is probably a better way to do this
+	; mov gs, ax
+	; swapgs
+	; sti
 
 	mov ax, [r14 + registers.cs]
 	mov qword [r15 + int_data.cs], rax

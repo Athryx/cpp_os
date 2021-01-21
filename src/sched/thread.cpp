@@ -311,10 +311,11 @@ void sched::thread::init (thread_func_t func)
 	if (init_done)
 	{
 		usize u_flag = proc.get_uid () ? V_USER : 0;
-		stack_start = (usize) proc.addr_space.alloc (stack_size, V_XD | V_WRITE | u_flag);
 
 		if (proc.get_uid () != 0)
 		{
+			stack_start = (usize) proc.addr_space.alloc (stack_size, V_XD | V_WRITE | u_flag);
+
 			kstack_size = KSTACK_SIZE;
 			kstack_start = (usize) proc.addr_space.alloc (kstack_size, V_XD | V_WRITE);
 			// this one should be 16 byte aligned
@@ -322,13 +323,11 @@ void sched::thread::init (thread_func_t func)
 		}
 		else
 		{
+			// TODO: make a better fix than this
+			stack_start = (usize) mem::kalloc (stack_size);
 			kstack_size = 0;
 			kstack_start = 0;
 		}
-
-		// this doesn't need to lock since proc is parametere, and the thread this is running in will never change, so proc_c () will never change
-		if (&proc_c ().addr_space == &proc.addr_space)
-			proc.addr_space.sync_tlb (stack_start);
 
 		// system v abi says stack needs to be 16 byte aligned before call, so this - 8 is like ret address on stack
 		regs.rsp = stack_start + stack_size - 8;
@@ -352,11 +351,7 @@ void sched::thread::init (thread_func_t func)
 		init_done = true;
 	}
 
-	if (!proc.add_thread (*this))
-	{
-		error("Could not add thread to thread list");
-		panic ("Recovering from this error is unimplmented");
-	}
+	assert(proc.add_thread (*this));
 }
 
 

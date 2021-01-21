@@ -10,6 +10,7 @@ using namespace mem;
 
 
 pallocator::pallocator (usize start_addr, usize end_addr, usize first_order_size)
+: lock (1)
 {
 	init (start_addr, end_addr, first_order_size);
 }
@@ -28,11 +29,7 @@ void pallocator::init (usize start_addr, usize end_addr, usize first_order_size)
 	this->first_order_size = first_order_size;
 	this->fo_bits = log2 (first_order_size);
 
-	if (end_meta <= this->start_addr)
-	{
-		error("allocator passed invalid memory zone")
-		return;
-	}
+	assertm(end_meta > this->start_addr, "allocator passed invalid memory zone");
 
 	usize diff = end_meta - this->start_addr;
 	this->end_addr = align_down (end_meta - align_up (8 * (diff / first_order_size), PAGE_SIZE), first_order_size);

@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include "sched/thread.hpp"
 #include <types.hpp>
 #include <mem/mem_def.hpp>
 #include <util/linked_list.hpp>
@@ -26,7 +27,7 @@ namespace mem
 	{
 		public:
 			// needed because a pallocator is needed in data section, but start and end address are not known at compile time
-			pallocator () {}
+			pallocator () : lock(1) {}
 			// end_addr must be at least a page bigger than start_addr
 			pallocator (usize start_addr, usize end_addr, usize first_order_size);
 			void init (usize start_addr, usize end_addr, usize first_order_size);
@@ -71,6 +72,7 @@ namespace mem
 			usize get_space (usize addr);
 
 
+			sched::semaphore lock;
 			util::linked_list lists[MAX_SUPPORTED_MEM_BITS];
 
 			usize start_addr;

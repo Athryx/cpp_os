@@ -58,7 +58,7 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 	#ifdef x64
 	if (hdr->magic != ELF_MAGIC || hdr->bits != ELF_64_BIT || hdr->endian != ELF_LITTLE_ENDIAN || hdr->abi != ELF_SYSTEM_V || hdr->arch != ELF_x64 || hdr->p_hdr_entry_size != sizeof (elf::p_header))
 	{
-		error("Invalid elf header for x64 architecture")
+		kprinte ("Invalid elf header for x64 architecture");
 		return NULL;
 	}
 	#endif
@@ -66,14 +66,14 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 
 	if (hdr->p_hdr + hdr->p_hdr_n * hdr->p_hdr_entry_size > prgrm + len)
 	{
-		error("Program header list is not in elf memory region")
+		kprinte ("Program header list is not in elf memory region");
 		return NULL;
 	}
 
 	process *out = new process (uid);
 	if (out == NULL)
 	{
-		error("Could not create process object")
+		kprinte ("Could not create process object");
 		return NULL;
 	}
 
@@ -89,7 +89,7 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 		if (p_hdr.p_offset + p_hdr.p_filesz > len)
 		{
 			delete out;
-			error("Invalid program header in elf program")
+			kprinte ("Invalid program header in elf program");
 			return NULL;
 		}
 
@@ -97,7 +97,7 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 		if (mem == NULL)
 		{
 			delete out;
-			error("Not enough memory to load elf program")
+			kprinte ("Not enough memory to load elf program");
 			return NULL;
 		}
 
@@ -111,7 +111,7 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 		if (!out->addr_space.map_at ((usize) mem, p_hdr.p_vaddr, p_hdr.p_memsz, flags))
 		{
 			delete out;
-			error("Could not map program region in virtual address space")
+			kprinte ("Could not map program region in virtual address space");
 			return NULL;
 		}
 	}
@@ -119,7 +119,7 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 	if (out->new_thread ((thread_func_t) hdr->entry) == NULL)
 	{
 		delete out;
-		error("Could not create first thread of new process")
+		kprinte ("Could not create first thread of new process");
 		return NULL;
 	}
 

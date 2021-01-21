@@ -42,10 +42,10 @@ LD_SCRIPT=$ARC/linker.ld
 
 O="-O2"
 EXT=".o"
-[[ $1 = debug ]] && G_DEF="-D debug" G=-g && O=-O0 && EXT=".g.o"
+[[ $1 != release ]] && G_DEF="-D debug" G=-g && O=-O0 && EXT=".g.o"
 
 # append $LIB_INCL_PATHS to COMP_FLAGS variable definition if you want to use a library
-COMP_FLAGS="-I$INCL/ -c -ffreestanding -fno-rtti -fno-exceptions -Wall -Wextra -Wno-unused-parameter -Wno-unused-function -mno-red-zone -mgeneral-regs-only -mcmodel=large -D $ARCH $G_DEF"
+COMP_FLAGS="-I$INCL/ -c -ffreestanding -fno-rtti -fno-exceptions -Wall -Wextra -Wno-unused-parameter -Wno-unused-function -mno-red-zone -mgeneral-regs-only -mcmodel=large -D VM -D $ARCH $G_DEF"
 ASM_FLAGS="-I$INCL/arch/$ARCH/ -f elf64 -F dwarf"
 # append $LIB_PATHS to LINK_FLAGS variable definition if you want to use a library
 LINK_FLAGS="-ffreestanding -nostdlib -lgcc -mcmodel=large -n -T $LD_SCRIPT"
