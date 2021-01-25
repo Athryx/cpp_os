@@ -4,6 +4,7 @@ global syscall_entry
 
 extern sys_rsp
 extern syscalls
+extern _ZN5sched8thread_cE	; FIXME: change this to extern "C" in c++ code
 
 section .text
 bits 64
@@ -13,11 +14,17 @@ syscall_entry:
 	swapgs
 	mov [gs:gs_data.call_save_rsp], rsp	; save caller rsp
 	mov rsp, [gs:gs_data.call_rsp]		; load kernel rsp
-	swapgs
-	sti
 
 	push r11		; save old flags
 	push r10		; save old rsp
+
+	mov r11, [gs:gs_data.call_save_rsp]	; need to update call_save_rsp in thread data structure
+	mov r10, _ZN5sched8thread_cE		; need to do this to get around relocation issue
+	add r10, registers.call_save_rsp
+	mov [r10], r11
+	swapgs
+	sti
+
 	push rcx		; save return rip
 
 	sub rsp, 8		; for 16 byte alignment when calling c function

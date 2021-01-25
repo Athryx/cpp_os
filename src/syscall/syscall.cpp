@@ -15,6 +15,7 @@
 void hi (void)
 {
 	kprintf ("hi :)\n");
+	sched::thread_c->print ();
 }
 
 

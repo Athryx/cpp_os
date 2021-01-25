@@ -4,6 +4,7 @@
 #include <sched/sched_def.hpp>
 #include <int.hpp>
 #include <syscall.hpp>
+#include <util/io.hpp>
 #include <util/time.hpp>
 #include <util/math.hpp>
 #include <util/linked_list.hpp>
@@ -138,13 +139,13 @@ void sched::init ()
 {
 	reg_int_handler (IRQ_TIMER, sched_time_handler, int_handler_type::reg);
 	reg_int_handler (INT_SCHED, sched_int_handler, int_handler_type::reg);
-	if (proc_c ().new_thread (thread_cleaner) == NULL)
+	if (proc_c ().new_thread ("kthread_cleaner", thread_cleaner) == NULL)
 		panic ("Could not create cleaner thread");
 }
 
 bool sched::sys_thread_new (syscall_vals_t *vals, u32 options, thread_func_t func)
 {
-	thread *new_thread = proc_c ().new_thread (func);
+	thread *new_thread = proc_c ().new_thread ("<user_thread>", func);
 	if (new_thread == NULL)
 		return false;
 	else
@@ -189,7 +190,9 @@ sched::registers *sched::schedule ()
 		thread_c->state = T_RUNNING;
 
 		if (&proc_c () != &proc_c_save)
+		{
 			set_cr3 (proc_c ().addr_space.get_cr3 ());
+		}
 
 		return &thread_c->regs;
 	}
@@ -198,10 +201,39 @@ sched::registers *sched::schedule ()
 }
 
 
+void sched::registers::print ()
+{
+	kprinte ("rax %x\n"
+		"rbx %x\n"
+		"rcx %x\n"
+		"rdx %x\n"
+		"rbp %x\n"
+		"rsp %x\n"
+		"kernel_rsp %x\n"
+		"call_save_rsp %x\n"
+		"rdi %x\n"
+		"rsi %x\n"
+		"r8 %x\n"
+		"r9 %x\n"
+		"r10 %x\n"
+		"r11 %x\n"
+		"r12 %x\n"
+		"r13 %x\n"
+		"r14 %x\n"
+		"r15 %x\n"
+		"rflags %x\n"
+		"rip %x\n"
+		"cs %x\n"
+		"ss %x\n",
+		rax, rbx, rcx, rdx, rbp, rsp, kernel_rsp, call_save_rsp, rdi, rsi, r8, r9, r10, r11, r12, r13, r14, r15, rflags, rip, cs, ss);
+}
+
+
 sched::thread::thread (process &proc, thread_func_t func)
 : proc (proc),
 stack_size (STACK_INITIAL_SIZE),
-process_alive (true)
+process_alive (true),
+name (NULL)
 {
 	init (func);
 }
@@ -209,7 +241,26 @@ process_alive (true)
 sched::thread::thread (process &proc, thread_func_t func, usize stack_size)
 : proc (proc),
 stack_size (stack_size),
-process_alive (true)
+process_alive (true),
+name (NULL)
+{
+	init (func);
+}
+
+sched::thread::thread (const char *name, process &proc, thread_func_t func)
+: proc (proc),
+stack_size (STACK_INITIAL_SIZE),
+process_alive (true),
+name (name)
+{
+	init (func);
+}
+
+sched::thread::thread (const char *name, process &proc, thread_func_t func, usize stack_size)
+: proc (proc),
+stack_size (stack_size),
+process_alive (true),
+name (name)
 {
 	init (func);
 }
@@ -294,6 +345,12 @@ void sched::thread::move_to (usize state_list)
 	state = state_list;
 	if (state_list != T_SEMAPHORE_WAIT)
 		t_list[state_list].append (this);
+}
+
+void sched::thread::print ()
+{
+	kprinte ("Thread %s:\n", get_name ());
+	regs.print ();
 }
 
 void sched::thread::init (thread_func_t func)

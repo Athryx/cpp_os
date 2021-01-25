@@ -52,8 +52,11 @@ void int_handler_##vec (struct int_data	*data)			\
 extern "C" void int_handler_##vec (void); /* for reg_b_handler */			\
 extern "C" sched::registers *c_int_handler_##vec (struct int_data *data, error_code_t error, sched::registers *regs)	\
 {										\
-	if (!(regs->cs & 0b11))							\
-		regs->call_save_rsp = kdata::data.call_save_rsp;		\
+	if ((regs->cs & 0b11))	/* kernel_rsp and save_rsp will have garbage on the stack from assembly code, set them here */	\
+	{									\
+		regs->kernel_rsp = sched::thread_c->regs.kernel_rsp;		\
+		regs->call_save_rsp = sched::thread_c->regs.call_save_rsp;	\
+	}									\
 	sched::registers *out = NULL;						\
 	for (u8 i = 0; i < MAX_HANDLERS; i ++)					\
 	{									\
@@ -70,7 +73,10 @@ extern "C" sched::registers *c_int_handler_##vec (struct int_data *data, error_c
 		kdata::data.call_rsp = out->kernel_rsp;				\
 		kdata::data.call_save_rsp = out->call_save_rsp;			\
 		tss.rsp0 = out->kernel_rsp;					\
-		kprinte ("Context switch:\nfrom function c_int_handler_%u\nrip: %x\nrsp: %x\nkernel_rsp: %x\n\n", vec, out->rip, out->rsp, out->kernel_rsp);	\
+		kprinte ("Context switch to %s\n", sched::thread_c->get_name ());	\
+		kprinte ("pointer: %x\n", sched::thread_c);			\
+		out->print ();							\
+		kprinte ("tss.rsp0: %u\n\n", tss.rsp0);				\
 	}									\
 	return out;								\
 }

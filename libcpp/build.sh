@@ -62,6 +62,7 @@ mkdir -p $(tree -fid src/ | awk -v builddir="$BUILDDIR/" '{if ($0 == "") exit 0;
 function comp_time {
 	TEMP=$BUILDDIR/$1$EXT
 	[[ -e $TEMP ]] || return 0
+	[[ $1 -nt $TEMP ]] && return 0
 	DEPS="$(awk 'BEGIN {FS="<"; ORS=" "} /^#include/ {gsub (/>/, ""); print "include/" $2}' $1) $1"
 	for DEP in $DEPS
 	do

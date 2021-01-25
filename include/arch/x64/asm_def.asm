@@ -60,6 +60,24 @@ extern c_asmprint
 
 %define INT_SCHED 128
 
+%define DEBUGCON_PORT 0xe9
+
+%macro nsprintax 0
+	mov al, 0x61
+	out DEBUGCON_PORT, al
+	mov al, 0x0a
+	out DEBUGCON_PORT, al
+%endmacro
+
+%macro nsprint 0
+	push rax
+	mov al, 0x61
+	out DEBUGCON_PORT, al
+	mov al, 0x0a
+	out DEBUGCON_PORT, al
+	pop rax
+%endmacro
+
 
 struc registers
 	.rax resq 1

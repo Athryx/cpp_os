@@ -116,7 +116,8 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 		}
 	}
 
-	if (out->new_thread ((thread_func_t) hdr->entry) == NULL)
+	// TODO: make this have same name as process
+	if (out->new_thread ("user_main_thread", (thread_func_t) hdr->entry) == NULL)
 	{
 		delete out;
 		kprinte ("Could not create first thread of new process");
@@ -128,7 +129,12 @@ sched::process *sched::process::load_elf (void *program, usize len, u8 uid)
 
 sched::thread *sched::process::new_thread (thread_func_t func)
 {
-	thread *out = new thread (*this, func);
+	return new_thread (NULL, func);
+}
+
+sched::thread *sched::process::new_thread (const char *name, thread_func_t func)
+{
+	thread *out = new thread (name, *this, func);
 	if (out == NULL)
 		return NULL;
 
@@ -231,7 +237,7 @@ void sched::proc_init (void)
 	if (!proc)
 		panic ("Couldn't make kernel process data");
 
-	thread *idle_thread = new thread (*proc, NULL, 0);
+	thread *idle_thread = new thread ("kidle_thread", *proc, NULL, 0);
 	if (!idle_thread)
 		panic ("Couldn't make idle thread data");
 

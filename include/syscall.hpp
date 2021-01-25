@@ -19,5 +19,5 @@ namespace call
 
 	// pass in rsp, if it is in syscall stack unused zone, update syscall_stack_pointer
 	// TODO: make stack regrowable
-	void update_stack (usize rsp);
+	//void update_stack (usize rsp);
 }

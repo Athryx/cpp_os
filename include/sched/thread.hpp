@@ -37,6 +37,7 @@ namespace sched
 		usize rip;
 		u16 cs;
 		u16 ss;
+		void print ();
 	} __attribute__ ((packed));
 
 	class thread : public util::list_node
@@ -120,8 +121,11 @@ namespace sched
 		public:
 			// TODO: make stack regrowable
 			// TODO: put nonexistant page on end of stack to prevent stack overflows
+			// NOTE: thread name is only for debugging purposes, it isn't necassary
 			thread (process &proc, thread_func_t func);
 			thread (process &proc, thread_func_t func, usize stack_size);
+			thread (const char *name, process &proc, thread_func_t func);
+			thread (const char *name, process &proc, thread_func_t func, usize stack_size);
 			~thread ();
 
 			void block (u8 state);
@@ -140,9 +144,13 @@ namespace sched
 			// should be called while scheduler is locked
 			void move_to (usize state_list);
 
+			void print ();
+
 			inline usize get_sleep_time () { return sleep_time; }
 
 			inline usize get_stack_size () { return stack_size; }
+
+			inline const char *get_name () { return name ? name : "<anonymous_thread>"; }
 
 			inline void set_process_alive (bool in) { process_alive = in; }
 
@@ -165,6 +173,8 @@ namespace sched
 			u64 sleep_time;
 
 			bool process_alive;
+
+			const char *name;
 	};
 
 	// TODO: make mutex

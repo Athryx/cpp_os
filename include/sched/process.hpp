@@ -25,6 +25,7 @@ namespace sched
 			static process *load_elf (void *program, usize len, u8 uid);
 
 			thread *new_thread (thread_func_t func);
+			thread *new_thread (const char *name, thread_func_t func);
 			bool add_thread (thread &thr);
 			void rem_thread (thread &thr);
 
